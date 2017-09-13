@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\NeedsTeXFormat{LaTeX2e}
+\def\filename{iipage.sty}
+\def\filedate{1996/03/31}
+\def\fileversion{1.0}
+\ProvidesPackage{iipage}[\filedate\space\fileversion\space
+                         IIASA LaTeX2e package]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newdimen \paperlongedge  \paperlongedge  = 29.7cm
+\newdimen \papershortedge \papershortedge = 21.0cm
+\newdimen \headextra     \newdimen \texttopat       \newcount \textlines
+\newdimen \leftextra     \newdimen \textleftat
+\newdimen \oddleftextra  \newdimen \evenleftextra   \newdimen \bindextra
+
+\paperheight    = \paperlongedge
+\paperwidth     = \papershortedge 
+
+\def\iipagenums{\pagestyle{plain}\thispagestyle{empty}}
+\def\iifullpage{%
+ \textheight = 25.00cm
+ \headheight =  0.45cm \headsep = 0.85cm \footskip = 1.10cm
+ \textwidth  = 16.00cm
+ \marginparsep\z@ \marginparwidth\z@ \@mparswitchfalse
+ \headextra\z@ \texttopat\z@ \leftextra\z@ \textleftat\z@ 
+ \oddleftextra\z@ \evenleftextra\z@ \bindextra\z@
+ \iipage\relax \iipagenums}
+\def\iilandpage{\paperheight = \papershortedge \paperwidth = \paperlongedge
+ \ifdim\textheight>\textwidth
+    \dimen0 = \textheight \textheight = \textwidth \textwidth = \dimen0 \fi
+ \iipage\relax}
+\def\iiportpage{\paperheight = \paperlongedge \paperwidth = \papershortedge
+ \ifdim\textheight<\textwidth
+    \dimen0 = \textheight \textheight = \textwidth \textwidth = \dimen0 \fi
+ \iipage\relax}
+
+\def\iipage{\@ifnextchar[{\ii@page}{\ii@page[]}}
+\def\ii@page[#1]{%
+ #1\relax
+ \ifnum\textlines>\z@ \global\textheight = \textlines\baselineskip \fi
+ \ifdim\texttopat=\z@
+   \global\topmargin = \paperheight
+   \global\advance\topmargin-\headheight \global\advance\topmargin-\headsep
+   \global\advance\topmargin-\textheight \global\advance\topmargin-\footskip
+   \global\divide \topmargin 2
+ \else
+   \global\topmargin = \texttopat
+   \global\advance\topmargin-\headheight \global\advance\topmargin-\headsep
+ \fi
+ \global\advance\topmargin\headextra \global\advance\topmargin-1in
+ \ifdim\textleftat=\z@
+   \global\oddsidemargin = \paperwidth
+   \global\advance\oddsidemargin-\bindextra
+   \global\advance\oddsidemargin-\textwidth
+   \global\advance\oddsidemargin-\marginparsep
+   \global\advance\oddsidemargin-\marginparwidth
+   \global\divide \oddsidemargin 2
+ \else
+   \global\oddsidemargin = \textleftat
+ \fi
+ \global\advance\oddsidemargin-1in \global\evensidemargin = \oddsidemargin
+ \global\advance\oddsidemargin  \bindextra
+ \global\advance\oddsidemargin  \leftextra
+ \global\advance\oddsidemargin  \oddleftextra
+ \global\advance\evensidemargin \leftextra
+ \global\advance\evensidemargin \evenleftextra
+ \iifixtextheight\iifixtextwidth
+}
+
+\def\iifixtextheight{%
+ \global\textheight=\textheight \global\@colht=\textheight
+ \global\@colroom  =\textheight \global\vsize =\textheight
+ \begingroup \@floatplacement \@dblfloatplacement \endgroup}
+\def\iifixtextwidth{%
+ \global\textwidth=\textwidth \global\columnwidth=\textwidth
+ \if@twocolumn \global\advance \columnwidth-\columnsep
+               \global\divide  \columnwidth 2 \global\@firstcolumntrue \fi
+ \global\linewidth=\columnwidth \global\hsize=\columnwidth \relax}
+
+\newdimen\iivspacesavepos
+\def\iivspaceto{\@ifstar{\iivs@to{\hrule height\z@}}{\iivs@to{}}}
+\def\iivs@to#1#2{%
+ \par \hrule height\z@ \null
+ \dimen2=\pagetotal
+ \dimen4=\topmargin \advance\dimen4 1in
+ \advance\dimen4\headheight \advance\dimen4\headsep
+ \dimen0=#2 \advance\dimen0-\dimen4 \advance\dimen0-\pagetotal
+ \vskip\dimen0 \hrule height\z@ \null \vskip-\parskip #1\relax
+ \iivspacesavepos=\dimen2 \advance\iivspacesavepos\dimen4 \relax}
+\def\iivspaceback{\iivspaceto\iivspacesavepos \relax}
+
+% INIT to normal page dimens
+\iifullpage
+
+\endinput

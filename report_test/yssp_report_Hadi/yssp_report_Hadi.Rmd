@@ -1,0 +1,82 @@
+---
+output: 
+  iiasaRmarkdown::iiasawp:
+    pandoc_args: --natbib
+    keep_tex: true
+    latex_engine: pdflatex
+## If YSSP use yssp: true
+yssp: true
+yy: yy
+nnn: nnn
+author:
+  - name: Hadi
+    affiliation: International Institute for Applied Systems Analysis (IIASA).
+    symbol: 1
+    email: hadi@iiasa.ac.at
+    biography: > 
+      Some text about the first author. Edit or remove this text. 
+  - name: Second Author
+    affiliation: Second author affiliation.
+    symbol: 2
+    biography: > 
+      Some text about the second author. Edit or remove this text. 
+  - name: Third Author
+    symbol: 1
+    biography: > 
+programleader:
+  - name: Program Leader Name
+    email: name@iiasa.ac.at
+    program: IIASA Program
+## For Latex code in the title use double backslash \\
+title:
+  line1: "Line One of Title:"
+  line2: "Line Two After Linebreak or Use Only Line1 and Allow Title to Break Automatically"
+## Edit or remove the fields for abstract, foreword, or acknowledgments. 
+abstract: >
+  This template demonstrates some of the basic you'll need to create your IIASA Working Paper or YSSP report combining \proglang{R} markdown and \proglang{LaTex}.
+foreword: > 
+  Edit or remove this text. 
+acknowledgments: > 
+  Edit or remove this text. 
+abouttheauthors: true
+tableofcontents: true
+listoftables: false
+listoffigures: true
+bibliography: references.bib
+preamble: >
+  \usepackage{amsmath}
+---
+
+# Introduction 
+
+Markdown documents are fully reproducible and work with several programming languages (e.g. Python, SQL), for more details see [@RStudio:2016;@GitHub:2014]. 
+
+# Code formatting
+
+## Using Latex commands
+
+Use the latex commands:
+
+* Programming language \proglang{R}
+* Package or library \pkg{plyr}
+* Code snippets \code{print("abc")}
+
+## Using code chuncks
+
+Code can be inserted in the text using grave accent ( $\grave{}$ ), e.g. `x=1`, or in markdown blocks, such that
+
+```{r simple-r-code, echo=TRUE, eval=TRUE, results='markup'}
+x <- seq(1, 10, length.out = 100)
+round(x,2)
+```
+
+The chunk can also include plot commands, which crete and insert the figures in the the text, such as Figure \ref{fig:simple-r-plot} produced by the following chunk
+
+```{r simple-r-plot, echo=TRUE, eval=TRUE, results='markup', fig.cap='\\proglang{R} plot example. For \\code{LaTex} code in the caption use double backslash \\textbackslash\\textbackslash.',  fig.pos="ht"}
+y <- cos(x)
+plot(x, y, type = "l", col = "red")
+lines(x, -y, col = "blue")
+```
+
+For more details see the package [vignette](./inst/doc/iiasaRmarkdown.pdf) and the following web tutorials  [http://rmarkdown.rstudio.com/index.html](http://rmarkdown.rstudio.com/index.html) and [https://guides.github.com/features/mastering-markdown/](https://guides.github.com/features/mastering-markdown/).
+

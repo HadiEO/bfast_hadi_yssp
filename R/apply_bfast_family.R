@@ -1,22 +1,13 @@
-require(raster)
-require(plyr)
-require(tidyverse)
-require(bfastSpatial)   # See http://www.loicdutrieux.net/bfastSpatial/
-require(sp)
-require(rgrowth)
-require(bfastPlot)
-
-
 # The Landsat NDMI time stack
-list.files("rds")
-NDMI.DG1 <- read_rds("data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds")
-NDMI.DG2 <- read_rds("data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds")
+list.files("sample_data/data3/rds")
+NDMI.DG1 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds")
+NDMI.DG2 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds")
 
 # Go to arcmap, make mesh polygons and points from the Landsat pixels, select example polygons (= pixels) [DONE]
 # Now import the selected mesh points (= pixels) to extract the time series
-selectLandsatPixels.DG1 <- readOGR(dsn = "data/data3/shp", layer = "meshSelect_prevDG1_label_ok")
-selectLandsatPixels.DG2 <- readOGR(dsn = "data/data3/shp", layer = "meshSelect_prevDG2_label_ok")
-
+selectLandsatPixels.DG1 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG1_label_ok")
+selectLandsatPixels.DG2 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG2_label_ok")
+# Todo: use sf object instead of sp. 
 
 #################################################################################################################
 # Extract the NDMI at select Landsat pixels --------------------------------
@@ -119,14 +110,15 @@ print(reg)
 #################################################################################################################
 # Apply sequential-BFAST  --------------------------------
 ##################################################################################################################
-p <- 2; years <- seq(2000, 2015, by = p)              
+p <- 2; years <- seq(2005, 2015, by = p)              
 
 bfmSeq.H <- lapply(years, 
-                    FUN = function(z) bfastmonitor(window(bts, end = c(z + p, 1)), start = c(z, 1), history = "ROC", 
+                    FUN = function(z) bfastmonitor(window(bts, end = c(z + p, 1)), start = c(z, 1), history = "all", 
                                                    formula = response ~ harmon, order = 1, h = 0.25))
+# history = "ROC" gives too few observations to fit a new history
 
 # Plot the result
-plot.bfmSeq <- bfmPlot(bfmSeq.TH, plotlabs = years, displayTrend = TRUE, displayMagn = TRUE, displayResiduals = "monperiod") + 
+plot.bfmSeq <- bfmPlot(bfmSeq.H, plotlabs = years, displayTrend = TRUE, displayMagn = TRUE, displayResiduals = "monperiod") + 
   theme_bw() + scale_y_continuous(limits = c(-0.4,0.8))
 plot.bfmSeq
 
@@ -185,7 +177,7 @@ time.DG1 <- system.time(
 
 # Change date
 change <- raster(bfmArea.DG1, 1)
-x11()
+# x11()
 plot(change)
 
 # Change magnitude
@@ -203,10 +195,12 @@ plot(magn, main="Magnitude: all pixels")
 #################################################################################################################
 # Apply REGROWTH to all pixels  --------------------------------
 ##################################################################################################################
-# TODO: Cut NDMI.DG1.uniqueDates raster time stack to 8 Aug 2015
+# Cut NDMI.DG1.uniqueDates raster time stack to 8 Aug 2015
+NDMI.DG1.uniqueDates.trim <- subsetRasterTS(NDMI.DG1.uniqueDates, 
+                                            maxDate = c(2015,221))
 
 time.DG1.reg <- system.time(
-  regrowArea.DG1 <- regSpatial(NDMI.DG1.uniqueDates, change = bfmArea.DG1$breakpoint, h = 0.5, type = "16-day") 
+  regrowArea.DG1 <- regSpatial(NDMI.DG1.uniqueDates.trim, change = bfmArea.DG1$breakpoint, h = 0.5, type = "16-day") 
 )
 
 plot(regrowArea.DG1)

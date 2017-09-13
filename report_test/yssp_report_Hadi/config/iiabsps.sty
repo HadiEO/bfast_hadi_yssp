@@ -1,0 +1,42 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\NeedsTeXFormat{LaTeX2e}
+\def\filename{iiabsps.sty}
+\def\filedate{1996/03/31}
+\def\fileversion{1.0}
+\ProvidesPackage{iiabsps}[\filedate\space\fileversion\space
+                         IIASA LaTeX2e package]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Commands to get absolute point-size directly in standard docstyle sizes
+% (The \rm makes things act like old-style LaTex.)
+%
+\ifcase\@ptsize % 10pt : 6 -> 7 ; 11 -> 12
+	\def\fivpt{\tiny\rm}		\def\sixpt{\scriptsize\rm}
+	\def\sevpt{\scriptsize\rm}	\def\egtpt{\footnotesize\rm}
+	\def\ninpt{\small\rm}		\def\tenpt{\normalsize\rm}
+	\def\elvpt{\large\rm}		\def\twlpt{\large\rm}
+	\def\frtnpt{\Large\rm}		\def\svtnpt{\LARGE\rm}
+	\def\twtypt{\huge\rm}		\def\twfvpt{\Huge\rm}
+\or % 11pt : 5 -> 6 ; 7 -> 8
+	\def\fivpt{\tiny\rm}		\def\sixpt{\tiny\rm}
+	\def\sevpt{\scriptsize\rm}	\def\egtpt{\scriptsize\rm}
+	\def\ninpt{\footnotesize\rm}	\def\tenpt{\small\rm}
+	\def\elvpt{\normalsize\rm}	\def\twlpt{\large\rm}
+	\def\frtnpt{\Large\rm}		\def\svtnpt{\LARGE\rm}
+	\def\twtypt{\huge\rm}		\def\twfvpt{\Huge\rm}
+\or % 12pt : 5 -> 6 ; 7 -> 8 ; 9 -> 8
+	\def\fivpt{\tiny\rm}		\def\sixpt{\tiny\rm}
+	\def\sevpt{\scriptsize\rm}	\def\egtpt{\scriptsize\rm}
+	\def\ninpt{\scriptsize\rm}	\def\tenpt{\footnotesize\rm}
+	\def\elvpt{\small\rm}		\def\twlpt{\normalsize\rm}
+	\def\frtnpt{\large\rm}		\def\svtnpt{\Large\rm}
+	\def\twtypt{\LARGE\rm}		\def\twfvpt{\huge\rm}
+\fi
+\def\iiabsps#1{\ifcase #1 \or\fivpt\or\fivpt\or\fivpt\or\fivpt\or\fivpt
+	\or\sixpt\or\sevpt\or\egtpt\or\ninpt\or\tenpt\or\elvpt\or\twlpt
+	\or\frtnpt\or\frtnpt
+	\or\svtnpt\or\svtnpt\or\svtnpt
+	\or\twtypt\or\twtypt\or\twtypt \else\twfvpt\fi
+}
+
+\endinput 

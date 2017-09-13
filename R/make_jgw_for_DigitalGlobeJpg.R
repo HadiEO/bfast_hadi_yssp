@@ -1,11 +1,6 @@
 ## This script iterates through JPG files in a folder, make .jgw files and write lines in it
 ## .jgw is the worldfile for JPG files
-## Test data is in folder data/data1
-
-require(dplyr)
-require(tidyverse)
-require(stringr)
-
+## Test data is in folder sample_data/data1/
 
 # Function to make .jgw files with same filename as .jpg in a folder
 makeJGW <- function(folder) {
@@ -18,7 +13,7 @@ makeJGW <- function(folder) {
 
 
 
-selectDG.dbf <- read_csv("dg_CountPlusRange_more17.csv")   # List selected jpg filenames with longest data period and most no. of images
+selectDG.dbf <- read_csv("sample_data/data1/dg_CountPlusRange_more17.csv")   # List selected jpg filenames with longest data period and most no. of images
 selectDG.dbf <- selectDG.dbf[!is.na(selectDG.dbf$SceneName),]                      # There is NA
 bestDG.interesting <- selectDG.dbf
 
@@ -50,8 +45,9 @@ writeJGW <- function(folder) {
 
 # IMPORTANT!! Need to define projection of the JPG files as WGS84 e.g. in arcmap 
 
-# Now do for all folders (1) Create JGW files (2) Write lines in it -------
-# JGW.folders are folders where the JPG files are stores, one folder for one scene center (can be many dates)
-JGW.folders <- as.list(list.files("data/data1", full.names = TRUE)[-16])
-lapply(JGW.folders, FUN = makeJGW)              
-lapply(JGW.folders, FUN = writeJGW) 
+# Now do for all folders: (1) Create JGW files (2) Write lines in it -------
+# Run the following for your available .jpg
+# JGW.folders are folders where the JPG files are stored, one folder for one scene center (can be many dates)
+# JGW.folders <- as.list(list.files("sample_data/data1", full.names = TRUE)[-16])
+# lapply(JGW.folders, FUN = makeJGW)              
+# lapply(JGW.folders, FUN = writeJGW) 

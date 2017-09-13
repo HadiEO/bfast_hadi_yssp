@@ -1,3 +1,5 @@
+# Ignore directories?
+
 # History files
 .Rhistory
 .Rapp.history
@@ -33,3 +35,10 @@ vignettes/*.pdf
 *.knit.md
 *.xml
 .Rproj.user
+
+# Latex files
+/latex/*
+*~
+!/latex/*.tex
+!/latex/*.bib
+!/latex/figs/

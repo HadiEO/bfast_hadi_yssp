@@ -1,4 +1,3 @@
-
 # Example code for map accuracy assessment --------------------------------
 # From https://github.com/vwmaus/dtwSat
 

@@ -1,0 +1,157 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\NeedsTeXFormat{LaTeX2e}
+\def\filename{config/iiletthd.sty}
+\def\filedate{2013/09/01}
+\def\fileversion{2.0}
+\ProvidesPackage{iiletthd}[\filedate\space\fileversion\space
+                         IIASA LaTeX2e package]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{config/iipage}
+\RequirePackage{graphicx}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\ifx \SimpleOption\undefined
+   \def\SimpleOption#1{
+       \DeclareOption{#1}{
+           \InputIfFileExists{\CurrentOption.sty}{}%
+                 {\PackageWarningNoLine{iiletthd}{No file \CurrentOption.sty found}}
+       }
+   }
+\fi
+\SimpleOption{lh-sw}
+\SimpleOption{lh-gp}
+\SimpleOption{lh-di}
+\SimpleOption{lh-com}
+\SimpleOption{lh-tes}
+%\ExecuteOptions{lh-sw}
+\ProcessOptions\relax
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newbox   \iilogo
+\newdimen \iilogowidth \newdimen \iilogohsep \newdimen \iilogotw
+\newdimen \iilogopos   \newdimen \iilogosiz
+\newdimen \iilogovsep  \newdimen \iirulevsep \newdimen \iirulethk
+
+\let\iilogosep = \iilogovsep % for compatibility -- used in "iicomm" -- :-(
+
+\def\iiaddr@tdefs{%
+  \def\h{.50pt}\def\k{\kern-\h}\def\w{\kern.21em}\def\v{\kern.23em}%
+  \def\-{\hrule height\h depth\z@}\def\!{\vrule width\h depth\z@}%
+  \def\x{\ \ \raise1.0pt\hbox{\iihxfont\textbullet}\ \ }%
+  \def\f{\hfill}%
+  \def\+{\raise.20ex\hbox{\kern .20em\hbox to\z@{\hss\! height.40em\hss}%
+               \kern-.20em\raise.20em\vbox to\z@{\vss\- width .40em\vss}}\r\r}%
+  \def\({\raise.15ex\hbox{(}}\def\){\raise.15ex\hbox{)}}%
+  \def\({}\def\){}%
+  \def\/{\raise.15ex\hbox{/}}%
+  \def\p{\hskip.30em}\def\q{\hskip.10em}\def\r{\hskip.033em}%
+  \def\*{\hskip.10em{\lower.4ex\hbox{*}}\hskip.12em}%
+  \def\s{\vrule height.85em depth.35em width\z@}%
+  %
+  \iilogotw=\iilogowidth \advance\iilogotw-\wd\iilogo \advance\iilogotw-\iilogohsep
+}
+
+% Some users still do "\iilhboxes \usebox\iilogo".
+\def\iilhboxes{%
+  \global\setbox\iilogo=\hbox{\includegraphics[height=\iilogosiz]{\iilogofile}}%
+}
+
+\def\iiletttext#1{{% group to keep font-change (#1) and \iiaddr@tdefs local
+  #1\iiaddr@tdefs
+  \vbox to \ht\iilogo {%
+        \hbox to \iilogotw{\iiletttexta}\vss
+        \hbox to \iilogotw{\iiletttextb \s}\vss
+        \hbox to \iilogotw{\iiletttextc \s}\vss
+       % \hbox to \iilogotw{\iiletttextd}%
+        \setbox2=\hbox to \iilogotw{\iiletttextd}\dp2=0pt\box2%
+  }%
+}}
+
+\def\iiaddrpost#1{{% group to keep font-change (#1) and \iiaddr@tdefs local
+  #1\iiaddr@tdefs \begin{tabular}[b]{@{}l@{}}\iialeftbox\end{tabular}%
+}}
+\def\iiaddrtels#1{{% group to keep font-change (#1) and \iiaddr@tdefs local
+  #1\iiaddr@tdefs \begin{tabular}[b]{@{}r@{}}\iiarightbox\end{tabular}%
+}}
+
+\def\iiletthead{%
+      \@ifnextchar[{\iilogoplus}{\iilogosimp}}
+\def\iilogohead{%
+      \@ifnextchar[{\iilogoonly}{\iilogoonly[\null]}}
+\def\iiaddrhead{%
+       \@ifnextchar[{\iilogoaddr}{\iilogoaddr[\null]}}
+
+\def\iilhsetwd{\ifdim \iilogowidth=\z@   \iilogowidth=\textwidth \fi \relax}
+\def\iilhspace{\ifdim \iilogopos=\z@ \else \iivspaceto\iilogopos \fi \relax}
+\def\iilfbox#1{\hbox{\iilfont #1}}
+\def\iilstrut{\vrule height\z@ depth\iilogovsep width\z@}
+
+\def\iilogoline#1{\hbox to\textwidth{\hss\hbox to\iilogowidth{#1}\iilstrut\hss}}
+
+\def\iiruleline#1{{\hbox to\textwidth{\hss\hbox to\iilogowidth{#1}\hss}%
+  \vskip\iirulevsep\hbox to\textwidth{\hss\vrule depth\z@ height\iirulethk width\iilogowidth\hss}%
+}}
+\def\iilogosimp{{\iilhsetwd \iilhspace \iilhboxes
+    \iiruleline{\copy\iilogo \hspace\iilogohsep \iiletttext\iihfont}%
+}}
+\def\iilogoplus[#1]{{\iilhsetwd \iilhspace \iilhboxes
+    \iiruleline{\copy\iilogo \hspace\iilogohsep \iiletttext\iihfont}%
+    \iilogoline{\hbox to\wd\iilogo{\def~{\hss}\iimfont #1}\hfill}%
+}}
+\def\iilogoonly[#1]{{\iilhsetwd \iilhspace \iilhboxes
+    \iiruleline{\copy\iilogo           \hfill \iilfbox{#1}}%
+}}
+\def\iilogoaddr[#1]{{\iilhsetwd \iilhspace \iilhboxes
+    \iilogoline{\copy\iilogo           \hfill \iilfbox{#1}}%
+    \iilogoline{\iiaddrpost\iibfont    \hfill \iiaddrtels\iibfont}%
+}}
+\def\iilogorule#1{{\iilhsetwd
+    \iilogoline{\vrule depth\z@ height #1 width\iilogowidth}%
+}}
+
+%========================================================================
+
+\def\iilfont  {\fontsize{30}{35pt}\usefont{OT1}{phv}{m}{n}}%  cmssii40
+\def\iimfont  {\fontsize{12}{14pt}\usefont{OT1}{phv}{b}{n}}%  cmssbx10 scaled\magstep2
+\def\iihfont  {\fontsize{9}{11pt}\usefont{OT1}{phv}{m}{n}}%  cmss10   scaled 960
+\def\iihxfont {\fontsize{8}{11pt}\usefont{OT1}{phv}{m}{n}}%  cmbx10   scaled 800
+\def\iibfont  {\fontsize{10.95}{13pt}\usefont{OT1}{phv}{m}{sl}}%  cmss10   scaled\magstep2
+\def\iibxfont {\fontsize{9}{14pt}\usefont{OT1}{phv}{m}{sl}}%  cmbx10   scaled\magstep1
+\def\iibface  {\fontseries{b}\selectfont}%
+\def\iimface  {\fontseries{m}\selectfont}%
+
+\iilogohsep=0.40cm
+\iilogopos=1.20cm  \iilogosiz=1.50cm
+\iilogovsep=0.50cm \iirulevsep=-0.20cm \iirulethk=0.4pt
+
+\ifx\iilogofile\undefined \def\iilogofile   {config/iilogo}\fi
+\ifx\iitelnum\undefined   \def\iitelnum               {807}\fi
+\ifx\iifaxnum\undefined   \def\iifaxnum             {71313}\fi
+\ifx\iimailname\undefined \def\iimailname            {info}\fi
+\ifx\iiwebaddr\undefined  \def\iiwebaddr  {www.iiasa.ac.at}\fi
+
+\def\LHtel#1{\def\iitelnum{#1}}
+\def\LHfax#1{\def\iifaxnum{#1}}
+\def\LHmail#1{\def\iimailname{#1}}
+\def\LHweb#1{\def\iiwebaddr{#1}}
+
+\def\iiletttexta{International Institute for\f Tel\r\r: \(\r\+\r 43\p 2236\r\)\p \iitelnum}
+\def\iiletttextb{Applied Systems Analysis\f   Fax\r\r: \(\r\+\r 43\p 2236\r\)\p \iifaxnum}
+\def\iiletttextc{Schlossplatz 1\f   E-mail\r\r: \iimailname{\iibxfont @}iiasa.ac.at}
+\def\iiletttextd{A-2361\,Laxenburg, \r Austria\f   Web\r\r: \iiwebaddr}
+
+\def\iialeftbox{%
+  International Institute for\s \\
+  Applied Systems Analysis\s \\
+  Schlossplatz 1\s \\
+  A-2361\,Laxenburg, \r Austria\s
+}
+\def\iiarightbox{%
+  Tel\r\r: \p\p \(\r\+\r 43\p 2236\r\)\p \iitelnum\s \\
+  Fax\r\r: \p\p \(\r\+\r 43\p 2236\r\)\p \iifaxnum\s \\
+  E-mail\r\r: \p\p \iimailname{\iibxfont @}iiasa.ac.at\s \\
+  Web\r\r: \p\p \iiwebaddr\s
+}
+
+\def\iilrulbox{\leaders \hrule height 1.5pt depth -1.0pt \hfill}
+
+\endinput

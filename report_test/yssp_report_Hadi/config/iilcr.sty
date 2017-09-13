@@ -1,0 +1,90 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\NeedsTeXFormat{LaTeX2e}
+\def\filename{iilcr.sty}
+\def\filedate{1996/03/31}
+\def\fileversion{1.0}
+\ProvidesPackage{iilcr}[\filedate\space\fileversion\space
+                         IIASA LaTeX2e package]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\@oddlefthead{}       \def\@oddcenterhead{}       \def\@oddrighthead{}
+\def\@evenlefthead{}      \def\@evencenterhead{}      \def\@evenrighthead{}
+\def\@oddleftfoot{}       \def\@oddcenterfoot{}       \def\@oddrightfoot{}
+\def\@evenleftfoot{}      \def\@evencenterfoot{}      \def\@evenrightfoot{}
+
+% Format in which running headers/footers are output
+
+\def\iilcrfont{\small\rm\sl}
+
+\def\@lcr#1#2#3{%
+   \hbox to 0pt {\iilcrfont #1\hss}\hfil
+   \hbox to 0pt {\iilcrfont \hss#2\hss}\hfil
+   \hbox to 0pt {\iilcrfont \hss#3}%
+}
+
+\def\ps@iilcr{% 	for both headers and footers
+   \let\@mkboth\@gobbletwo
+   \def\@oddhead  {\@lcr \@oddlefthead  \@oddcenterhead  \@oddrighthead  }%
+   \def\@evenhead {\@lcr \@evenlefthead \@evencenterhead \@evenrighthead }%
+   \def\@oddfoot  {\@lcr \@oddleftfoot  \@oddcenterfoot  \@oddrightfoot  }%
+   \def\@evenfoot {\@lcr \@evenleftfoot \@evencenterfoot \@evenrightfoot }%
+}
+
+% Intended usage of iilcrheadonly, iilcrfootonly is with \thispagestyle;
+% e.g. \thispagestyle{iilcrheadonly} would suppress footers on current page
+
+\def\ps@iilcrheadonly{%
+   \let\@mkboth\@gobbletwo
+   \def\@oddhead  {\@lcr \@oddlefthead  \@oddcenterhead  \@oddrighthead  }%
+   \def\@evenhead {\@lcr \@evenlefthead \@evencenterhead \@evenrighthead }%
+   \def\@oddfoot{\@lcr{}{}{}}\def\@evenfoot{\@lcr{}{}{}}%
+}
+
+\def\ps@iilcrfootonly{%
+   \let\@mkboth\@gobbletwo
+   \def\@oddfoot  {\@lcr \@oddleftfoot  \@oddcenterfoot  \@oddrightfoot  }%
+   \def\@evenfoot {\@lcr \@evenleftfoot \@evencenterfoot \@evenrightfoot }%
+   \def\@oddhead{\@lcr{}{}{}}\def\@evenhead{\@lcr{}{}{}}%
+}
+
+% Specification of headers/footers
+
+% For headers/footers same on all pages, with no odd/even differentiation
+% except with "twoside", where left and right are switched on even pages.
+
+\def\iilcrhead#1#2#3{%
+   \def\@oddlefthead{#1}\def\@evenrighthead{#1}%
+   \def\@oddcenterhead{#2}\def\@evencenterhead{#2}%
+   \def\@oddrighthead{#3}\def\@evenlefthead{#3}%
+}
+
+\def\iilcrfoot#1#2#3{%
+   \def\@oddleftfoot{#1}\def\@evenrightfoot{#1}%
+   \def\@oddcenterfoot{#2}\def\@evencenterfoot{#2}%
+   \def\@oddrightfoot{#3}\def\@evenleftfoot{#3}%
+}
+
+% For odd/even differentiation:
+
+\def\iilcrohead#1#2#3{%
+   \def\@oddlefthead{#1}\def\@oddcenterhead{#2}\def\@oddrighthead{#3}%
+}
+
+\def\iilcrehead#1#2#3{%
+   \def\@evenlefthead{#1}\def\@evencenterhead{#2}\def\@evenrighthead{#3}%
+}
+
+\def\iilcrofoot#1#2#3{%
+   \def\@oddleftfoot{#1}\def\@oddcenterfoot{#2}\def\@oddrightfoot{#3}%
+}
+
+\def\iilcrefoot#1#2#3{%
+   \def\@evenleftfoot{#1}\def\@evencenterfoot{#2}\def\@evenrightfoot{#3}%
+}
+
+\def\iipagenums{%
+   \pagestyle{iilcr}\thispagestyle{iilcrfootonly}%
+   \iilcrhead{}{--\,\thepage\,--}{}%
+}
+
+\endinput
