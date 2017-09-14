@@ -1,22 +1,21 @@
 ## This code takes the Landsat image time stack downloaded from GEE and prepare them to be ready for running BFAST Spatial
-# Test data in folder sample_data/data2
 
 # Read the image time stack downloaded from GEE
-imgTimeStack_L5 <- brick("sample_data/data2/landsat5NDMI_square_15.tif")   # Landsat-5, "square 15" is just      
+imgTimeStack_L5 <- brick(paste(path, "/raster_time_stack/ndmi_geotiff/SC_1/landsat5NDMI_SC_1.tif", sep = ""))   # Landsat-5
 
-imgTimeStack_L7 <- brick("sample_data/data2/landsat7NDMI_square_15.tif")   # Landsat-7    
+imgTimeStack_L7 <- brick(paste(path, "/raster_time_stack/ndmi_geotiff/SC_1/landsat7NDMI_SC_1.tif", sep = ""))   # Landsat-7    
 
-imgTimeStack_L8 <- brick("sample_data/data2/landsat8NDMI_square_15.tif")   # Landsat-8     
+imgTimeStack_L8 <- brick(paste(path, "/raster_time_stack/ndmi_geotiff/SC_1/landsat8NDMI_SC_1.tif", sep = ""))   # Landsat-8     
 
 
 # Read the scene ID saved by copy-pasting from GEE console
-sceneId_L5 <- read_csv("sample_data/data2/square_15_L5.csv")
+sceneId_L5 <- read_csv(paste(path, "/raster_time_stack/scene_id/SC_1_L5.csv", sep = ""))
 sceneId_L5 <- sceneId_L5[seq(2,nrow(sceneId_L5),by=2),]
 
-sceneId_L7 <- read_csv("sample_data/data2/square_15_L7.csv")
+sceneId_L7 <- read_csv(paste(path, "/raster_time_stack/scene_id/SC_1_L7.csv", sep = ""))
 sceneId_L7 <- sceneId_L7[seq(2,nrow(sceneId_L7),by=2),]
 
-sceneId_L8 <- read_csv("sample_data/data2/square_15_L8.csv")
+sceneId_L8 <- read_csv(paste(path, "/raster_time_stack/scene_id/SC_1_L8.csv", sep = ""))
 sceneId_L8 <- sceneId_L8[seq(2,nrow(sceneId_L8),by=2),]
 
 names(imgTimeStack_L5) <- sceneId_L5$header             ## Rename the brick with scene id
@@ -34,4 +33,4 @@ getZ(imgTimeStack_L578)
 
 # Write to disk, change the output file name
 write_rds(imgTimeStack_L578, 
-          "sample_data/data2/NDMITimeStack_L578_sq_15.rds")
+          paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds", sep = ""))

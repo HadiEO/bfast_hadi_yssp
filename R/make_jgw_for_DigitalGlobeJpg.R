@@ -13,7 +13,7 @@ makeJGW <- function(folder) {
 
 
 
-selectDG.dbf <- read_csv("sample_data/data1/dg_CountPlusRange_more17.csv")   # List selected jpg filenames with longest data period and most no. of images
+selectDG.dbf <- read_csv(paste(path, "/sample_data/data1/dg_CountPlusRange_more17.csv", sep = ""))   # List selected jpg filenames with longest data period and most no. of images
 selectDG.dbf <- selectDG.dbf[!is.na(selectDG.dbf$SceneName),]                      # There is NA
 bestDG.interesting <- selectDG.dbf
 
@@ -51,3 +51,10 @@ writeJGW <- function(folder) {
 # JGW.folders <- as.list(list.files("sample_data/data1", full.names = TRUE)[-16])
 # lapply(JGW.folders, FUN = makeJGW)              
 # lapply(JGW.folders, FUN = writeJGW) 
+
+
+# Do for the newly added small clearing folder
+JGW.folders <- paste(path, "/digital_globe/SC_1", sep = "")
+lapply(JGW.folders, FUN = makeJGW)
+lapply(JGW.folders, FUN = writeJGW)
+

@@ -2,11 +2,15 @@
 .libPaths("C:/Program Files/R/R-3.3.1/library")
 
 # Load libraries
+require(ggplot2)
 require(raster)
 require(plyr)
 require(dplyr)
 require(stringr)
 require(tidyverse)
+require(lubridate)
+require(strucchange)
+require(zoo)
 require(bfastSpatial)  
 require(sp)
 require(rgrowth)
@@ -14,12 +18,16 @@ require(bfastPlot)
 require(mapedit)
 require(mapview)
 require(sf)
+require(dtwSat)
+require(shiny)
+require(timesyncR)
+
 
 
 # Set path for all machines
 
 if(.Platform$OS.type == 'windows') {
-  path <- 'C:/LocalUserData/User-data/hadi1/PHD_RESEARCH/STUDY_IIASA/hadi_yssp_data'
+  path <- 'C:/LocalUserData/User-data/hadi1/PHD_RESEARCH/STUDY_IIASA/bfast_hadi_yssp_data'
 } else {
 #   info <- Sys.info()
 #   if (info['nodename'] == 'vanoise') {
