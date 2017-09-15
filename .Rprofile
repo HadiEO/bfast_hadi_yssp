@@ -2,6 +2,7 @@
 .libPaths("C:/Program Files/R/R-3.3.1/library")
 
 # Load libraries
+require(rgdal)
 require(ggplot2)
 require(raster)
 require(plyr)
@@ -21,6 +22,9 @@ require(sf)
 require(dtwSat)
 require(shiny)
 require(timesyncR)
+require(doParallel)
+require(spatial.tools)
+require(STEF)
 
 
 

@@ -28,3 +28,10 @@ table.sq11 <- table(selectLandsatPixels.sq11$Visual); write.csv2(table.sq11, pas
 table.sq13 <- table(selectLandsatPixels.sq13$Visual); write.csv2(table.sq13, paste(path, "/table/reference_sq13.csv", sep = ""))
 
 
+
+
+# Todo: -------------------------------------------------------------------
+
+# Use STEF::spatialAccurayAssessment to validate date of change. Date must be decimal year
+# Use STEF::accuracy.random or accuracy.stratified for area-weighted / error-adjusted accuracy,
+# which requires area proportions (0-1) for each classes within the mapped area

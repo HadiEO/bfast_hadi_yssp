@@ -100,6 +100,12 @@ plot(bfm.H$mefp, functional = NULL)
 plot(bfm.H, ylim = c(-0.4,0.8), cex = 1, xlab = "Date", ylab = "NDMI")
 
 
+## NOTE: STEF::ybfastmonitorNorm is wrapped within rasterEngine
+## It has parameter to set minimum number of valid observations
+## in the pixel time series for such pixel to be analyzed.
+## Also there is parameter magThreshold.
+
+
 #################################################################################################################
 # Apply REGROWTH --------------------------------
 ##################################################################################################################
@@ -122,6 +128,28 @@ plot.bfmSeq <- bfmPlot(bfmSeq.H, plotlabs = years, displayTrend = TRUE, displayM
   theme_bw() + scale_y_continuous(limits = c(-0.4,0.8))
 plot.bfmSeq
 
+#################################################################################################################
+# Apply BFAST segmentation  --------------------------------
+##################################################################################################################
+# Interpolate NA (bfast() does not allow NA)
+tseq <- seq(start(zoo.L7Logged), end(zoo.L7Logged), by = 16)                    # Create the regular time steps, by 16 days
+zoo.L7Logged.interpolNA <- na.approx(zoo.L7Logged, xout = tseq)                 # Linearly interpolate NA values
+
+plot(zoo.L7Logged, type = 'p', cex = 1, ylim = c(0,1), pch = 19, xlim = c(as.Date("1999-01-01"), as.Date("2017-12-31")),
+     xlab = "Date", ylab = "NBR")
+lines(zoo.L7Logged.interpolNA, ylim = c(0,1))
+
+# Convert zoo to ts
+# See https://disc.gsfc.nasa.gov/julian_calendar.html
+ts.L7Logged.interpolNA <- ts(zoo.L7Logged.interpolNA, start = c(1999, 16), end = c(2017, 3), frequency = 23)      # 23 for 16-days
+
+# Run bfast()
+t.bfast <- system.time(
+  bf <- bfast(ts.L7Logged.interpolNA, h = 0.1, season = "none", max.iter = 1, breaks = NULL)
+)
+
+plot(bf)
+bf
 
 
 #################################################################################################################
