@@ -2,6 +2,9 @@
 list.files("sample_data/data3/rds")
 NDMI.DG1 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds")
 NDMI.DG2 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds")
+NDMI.SC1 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds", sep = ""))
+
+
 
 # Go to arcmap, make mesh polygons and points from the Landsat pixels, select example polygons (= pixels) [DONE]
 # Now import the selected mesh points (= pixels) to extract the time series
@@ -157,13 +160,15 @@ bf
 ##################################################################################################################
 # Need to make each raster layer is unique data, so average (na.rm = T) the raster when date is same
 
-temp <- table(getZ(NDMI.DG1)); temp <- as_tibble(temp)           # There are dates with multiple layers
-temp2 <- names(NDMI.DG1)                # the layer names are unique
+temp <- table(getZ(NDMI.SC1)); temp <- as_tibble(temp)           # There are dates with multiple layers
+# Insert check if table(temp$n) shows only unique value 1, then no multiple dates
+
+temp2 <- names(NDMI.SC1)                # the layer names are unique
 temp3 <- temp[temp$n > 1,]              # Z attribute = dates with multiple layers
-temp4 <- which(as.character(getZ(NDMI.DG1)) %in% temp3$Var1)    # Which layer number (ordered) belongs to the dates with multiple layers?
-temp5 <- subset(NDMI.DG1, temp4)
-temp6 <- which(!as.character(getZ(NDMI.DG1)) %in% temp3$Var1)   # Which layer number (ordered) NOT belongs to the dates with multiple layers?
-temp7 <- subset(NDMI.DG1, temp6)
+temp4 <- which(as.character(getZ(NDMI.SC1)) %in% temp3$Var1)    # Which layer number (ordered) belongs to the dates with multiple layers?
+temp5 <- subset(NDMI.SC1, temp4)
+temp6 <- which(!as.character(getZ(NDMI.SC1)) %in% temp3$Var1)   # Which layer number (ordered) NOT belongs to the dates with multiple layers?
+temp7 <- subset(NDMI.SC1, temp6)
 
 # Take the mean of duplicated dates
 k12.init <- temp5[[1]]; k12.init <- setZ(k12.init, z =  getZ(temp5)[1])      # Initialize storage variable
@@ -185,31 +190,37 @@ for(k in seq(1, nlayers(temp5), by = 2)) {
 k12.init <- subset(k12.init, 2:nlayers(k12.init))   # Remove the first layer i.e. init
 
 
-NDMI.DG1.uniqueDates <- stack(temp7, k12.init)      # Merge back with images with one date (temp7)
+NDMI.SC1.uniqueDates <- stack(temp7, k12.init)      # Merge back with images with one date (temp7)
 
 # SetZ and Re-order layers by dates
-NDMI.DG1.uniqueDates <- setZ(NDMI.DG1.uniqueDates, getSceneinfo(names(NDMI.DG1.uniqueDates))$date, name = 'time')   
-View(table(getZ(NDMI.DG1.uniqueDates)))
+NDMI.SC1.uniqueDates <- setZ(NDMI.SC1.uniqueDates, getSceneinfo(names(NDMI.SC1.uniqueDates))$date, name = 'time')   
+View(table(getZ(NDMI.SC1.uniqueDates)))
 
-NDMI.DG1.uniqueDates <- subset(NDMI.DG1.uniqueDates, order(getZ(NDMI.DG1.uniqueDates)))
-getZ(NDMI.DG1.uniqueDates)
+NDMI.SC1.uniqueDates <- subset(NDMI.SC1.uniqueDates, order(getZ(NDMI.SC1.uniqueDates)))
+getZ(NDMI.SC1.uniqueDates)
 
+# If no duplicated dates
+NDMI.SC1.uniqueDates <- NDMI.SC1
 
 # Run BFAST Spatial 
-time.DG1 <- system.time(
-  bfmArea.DG1 <- bfmSpatial(NDMI.DG1.uniqueDates, start = c(2005, 1), order = 1, h = 0.25, 
+time.SC1 <- system.time(
+  bfmArea.SC1 <- bfmSpatial(NDMI.SC1.uniqueDates, start = c(2005, 1), order = 1, h = 0.25, 
                             formula = response ~ harmon, history = "all",                    
-                            monend = c(2015,221))                                            # Set end monitoring period to 8 Aug 2015
+                            monend = c(2014,35)) # c(2015,221)                                           # Set end monitoring period to 8 Aug 2015
 )
 
 
 # Change date
-change <- raster(bfmArea.DG1, 1)
+change <- raster(bfmArea.SC1, 1)
 # x11()
-plot(change)
+raster::plot(change)
+
+# Write to disk
+writeRaster(change, filename = paste(path, "/change_map/bfmSpatial_SC1_date.tif", sep = ""), format = "GTiff")
+
 
 # Change magnitude
-magn <- raster(bfmArea.DG1, 2)                                    
+magn <- raster(bfmArea.SC1, 2)                                    
 magn.bkp <- magn                    # make a version showing only breakpoint pixels
 magn.bkp[is.na(change)] <- NA
 
@@ -217,7 +228,6 @@ x11()
 op <- par(mfrow=c(1, 2))
 plot(magn.bkp, main="Magnitude: breakpoints")
 plot(magn, main="Magnitude: all pixels")
-
 
 
 #################################################################################################################
