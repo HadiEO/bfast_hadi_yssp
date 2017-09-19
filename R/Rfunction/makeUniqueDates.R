@@ -8,7 +8,7 @@
 # Note: here simply take mean of observations for the same date
 
 # This function works only if there are at most two observations (layers) for a given date
-makeUniqueDates <- function(x, sensor) {
+makeUniqueDates <- function(x, sensor, collection) {
   
   temp <- table(getZ(x)) %>% as_tibble      # There are dates with multiple layers
 
@@ -47,11 +47,22 @@ makeUniqueDates <- function(x, sensor) {
   
   # SetZ and Re-order layers by dates
   if (sensor == "Landsat") {
-    dates <- getSceneinfo(names(x.uniqueDates))$date 
-    x.uniqueDates <- setZ(x.uniqueDates, dates, name = "time")
-    x.uniqueDates <- subset(x.uniqueDates, order(getZ(x.uniqueDates)))
+    if (collection == "Tier 1") {
+      dates <- as.Date(substr(names(x.uniqueDates), 13, 20), format = "%Y%m%d")
+      x.uniqueDates <- setZ(x.uniqueDates, dates, name = "time")
+      x.uniqueDates <- subset(x.uniqueDates, order(getZ(x.uniqueDates)))
+    } else {
+      dates <- getSceneinfo(names(x.uniqueDates))$date 
+      x.uniqueDates <- setZ(x.uniqueDates, dates, name = "time")
+      x.uniqueDates <- subset(x.uniqueDates, order(getZ(x.uniqueDates)))
+    }
+    
   } else if (sensor == "Sentinel-1") {
     dates <- as.Date(substr(names(x.uniqueDates), 18, 25), format = "%Y%m%d")
+    x.uniqueDates <- setZ(x.uniqueDates, dates, name = "time")
+    x.uniqueDates <- subset(x.uniqueDates, order(getZ(x.uniqueDates)))
+  } else if(sensor == "Sentinel-2") {
+    dates <- as.Date(substr(names(x.uniqueDates), 2, 9), format = "%Y%m%d")
     x.uniqueDates <- setZ(x.uniqueDates, dates, name = "time")
     x.uniqueDates <- subset(x.uniqueDates, order(getZ(x.uniqueDates)))
   }

@@ -21,36 +21,76 @@ S1.VV_DG1 <- setZ(S1.VV_DG1, date_S1.VV_DG1)
 # Make RasterTS with one observation per date 
 source("R/Rfunction/makeUniqueDates.R")
 # ! be sure that there are at most 2 layers per date table(table(getZ()))
-NDMI.DG1.unique <- makeUniqueDates(x = NDMI.DG1, sensor = "Landsat")
+NDMI.DG1.unique <- makeUniqueDates(x = NDMI.DG1, sensor = "Landsat")       # This takes a while
 S1.VH_DG1.unique <- makeUniqueDates(x = S1.VH_DG1, sensor = "Sentinel-1")
+saveRDS(NDMI.DG1.unique, str_c(path, "/raster_time_stack/ndmi_rds/ndmi_DG_1_unique.rds"))
+saveRDS(S1.VH_DG1.unique, str_c(path, "/raster_time_stack/ndmi_rds/S1VH_DG_1_unique.rds"))
 
 # Import the selected mesh points (= pixels) to extract the time series
 shp.folder <- paste(path, "/vector_data", sep = "")
 selectLandsatPixels.DG1 <- readOGR(dsn = shp.folder, layer = "meshSelect_prevDG1_label_ok")
 
 # Extract the NDMI at select Landsat pixels
-extrNDMI.DG1 <- bfastSpatial::zooExtract(x = subsetRasterTS(NDMI.DG1.unique, minDate = c(2015,1)), 
-                                         sample = selectLandsatPixels.DG1,                               
-                                         method = "simple")            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
-colnames(extrNDMI.DG1) <- selectLandsatPixels.DG1$Id_1
-                    
+# NDMI.DG1.unique.subset <- subsetRasterTS(NDMI.DG1.unique, minDate = c(2014,1))
+# extrNDMI.DG1 <- bfastSpatial::zooExtract(x = NDMI.DG1.unique.subset,
+#                                          sample = selectLandsatPixels.DG1,
+#                                          method = "simple")            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
+# colnames(extrNDMI.DG1) <- selectLandsatPixels.DG1$Id_1
+# saveRDS(extrNDMI.DG1, str_c(path, "/extracted_time_series/extrNDMI_DG1.rds"))
+extrNDMI.DG1 <- readRDS(str_c(path, "/extracted_time_series/extrNDMI_DG1.rds"))
 
 # Extract the VH backscatter at select Landsat pixels (this takes a bit of time)
-extrVH.DG1 <- bfastSpatial::zooExtract(x = S1.VH_DG1.unique, 
-                                       sample = selectLandsatPixels.DG1,                               
-                                       buffer = 15, fun = mean, small = TRUE)           # The Sentinel-1 pixel is 10m, so buffer 15m to extract 30x30m
+# extrVH.DG1 <- bfastSpatial::zooExtract(x = S1.VH_DG1.unique, 
+#                                        sample = selectLandsatPixels.DG1,                               
+#                                        buffer = 15, fun = mean, small = TRUE)           # The Sentinel-1 pixel is 10m, so buffer 15m to extract 30x30m
 
-colnames(extrVH.DG1) <- selectLandsatPixels.DG1$Id_1
-saveRDS(extrVH.DG1, str_c(path, "/extracted_time_series/extrVH_DG1.rds"))
+# colnames(extrVH.DG1) <- selectLandsatPixels.DG1$Id_1
+# saveRDS(extrVH.DG1, str_c(path, "/extracted_time_series/extrVH_DG1.rds"))
+extrVH.DG1 <- readRDS(str_c(path, "/extracted_time_series/extrVH_DG1.rds"))
 
 # Create gap-less time series
 intact.ids <- selectLandsatPixels.DG1@data %>% dplyr::filter(Visual == "Intact (20020929 - 20150815)") %>% 
   dplyr::select(Id_1)
 
+(which.id <- intact.ids$Id_1[7])
 
-ts1vh <- bfastts(extrVH.DG1)
+tlndmi <- bfastts(extrNDMI.DG1[, as.character(which.id)], dates = getZ(NDMI.DG1.unique.subset), type = "irregular")
+ts1vh <- bfastts(extrVH.DG1[, as.character(which.id)], dates = getZ(S1.VH_DG1.unique), type = "irregular")  
 
 
 # Plot time series
-bayts::plotts
+bayts::plotts(tsL = list(tlndmi, ts1vh), labL = list("Landsat NDMI", "Sentinel-1 VH [dB]"))   # ylimL = list(c(-0.2,0.8), c(-19,-6))
+
+
+# For print to pdf
+# which.columns <- which(names(extrVH.DG1) %in% as.character(intact.ids$Id_1))
+# which.extrTS <- extrVH.DG1[, which.columns]
+print.plotts <- function(k) {
+  which.id <- intact.ids$Id_1[k]
+  tlndmi <- bfastts(extrNDMI.DG1[, as.character(which.id)], dates = getZ(NDMI.DG1.unique.subset), type = "irregular")
+  ts1vh <- bfastts(extrVH.DG1[, as.character(which.id)], dates = getZ(S1.VH_DG1.unique), type = "irregular")  
+  bayts::plotts(tsL = list(tlndmi, ts1vh), labL = list("Landsat NDMI", "Sentinel-1 VH [dB]"))   # ylimL = list(c(-0.2,0.8), c(-19,-6))
+}
+
+# length(intact.ids$Id_1)
+for(k in seq(1, 17, by = 4)) {                                                                                 # just do manually for now
+  filename <- str_c(k, "_", k+3, ".pdf")
+  pdf(str_c(path, "/prelim_figs/pdf/", filename),    # Change output dir here
+      width = 7, height = 9, pointsize = 10)  
+  par(mfrow = c(4,1))
+  
+  for(x in k:(k+3)) print.plotts(x)                   
+  dev.off()
+}  
+
+
+# Manually do the rest
+from <- k+4
+to <- length(intact.ids$Id_1)
+filename <- str_c(from, "_", to, ".pdf")
+pdf(str_c(path, "/prelim_figs/pdf/", filename),    # Change output dir here
+    width = 7, height = 9, pointsize = 10)  
+par(mfrow = c(4,1))
+for(x in from:to) print.plotts(x)                           
+dev.off()
 

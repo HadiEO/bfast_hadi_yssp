@@ -3,13 +3,16 @@ list.files("sample_data/data3/rds")
 NDMI.DG1 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds")
 NDMI.DG2 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds")
 NDMI.SC1 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds", sep = ""))
-
+NDMI.SQ9 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_9.rds"))
 
 
 # Go to arcmap, make mesh polygons and points from the Landsat pixels, select example polygons (= pixels) [DONE]
 # Now import the selected mesh points (= pixels) to extract the time series
 selectLandsatPixels.DG1 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG1_label_ok")
 selectLandsatPixels.DG2 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG2_label_ok")
+selectLandsatPixels.SQ9 <- readOGR(dsn = str_c(),
+                                   layer = "meshSelect_prevDG2_label_ok")
+
 # Todo: use sf object instead of sp. 
 
 #################################################################################################################

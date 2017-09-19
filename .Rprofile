@@ -5,7 +5,7 @@
 require(rgdal)
 require(ggplot2)
 require(raster)
-require(plyr)
+# require(plyr)
 require(dplyr)
 require(stringr)
 require(tidyverse)
@@ -25,6 +25,7 @@ require(timesyncR)
 require(doParallel)
 require(spatial.tools)
 require(STEF)
+require(bayts)
 
 
 
