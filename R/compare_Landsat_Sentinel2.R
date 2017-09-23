@@ -63,7 +63,8 @@ print.plotts <- function(k) {
   which.id <- intact.ids$Id_1[k]
   tl78ndmi <- bfastts(extrNDMI.L78[, as.character(which.id)], dates = getZ(L78.NDMI_DG1.unique), type = "irregular")
   ts2ndmi <- bfastts(extrNDMI.S2[, as.character(which.id)], dates = getZ(S2.NDMI_DG1.unique), type = "irregular")  
-  bayts::plotts(tsL = list(tl78ndmi, ts2ndmi), labL = list("Landsat-7,8 NDMI (BOA)", "Sentinel-2 NDMI (TOA)"))   # ylimL = list(c(-0.2,0.8), c(-19,-6))
+  bayts::plotts(tsL = list(tl78ndmi, ts2ndmi), labL = list("Landsat-7,8 NDMI (BOA)", "Sentinel-2 NDMI (TOA)"), 
+                ylimL = list(c(-0.2,0.6), c(-0.2,0.6)))   # ylimL = list(c(-0.2,0.8), c(-19,-6))
 }
 
 # length(intact.ids$Id_1)
@@ -81,7 +82,7 @@ for(k in seq(1, 17, by = 4)) {                                                  
 # Manually do the rest
 from <- k+4
 to <- length(intact.ids$Id_1)
-filename <- str_c(from, "_", to, ".pdf")
+filename <- str_c(from, "_", to, "_ok.pdf")
 pdf(str_c(path, "/prelim_figs/pdf/Landsat_vs_Sentinel2/", filename),    # Change output dir here
     width = 7, height = 9, pointsize = 10)  
 par(mfrow = c(4,1))

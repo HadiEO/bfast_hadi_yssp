@@ -32,8 +32,8 @@ makeUniqueDates <- function(x, sensor, collection) {
     k1 <- temp5[[k]]; k1 <- setZ(k1, z = getZ(temp5)[k])
     k2 <- temp5[[k+1]]; k2 <- setZ(k2, z =  getZ(temp5)[k+1])                           # This works because each dates have exactly two scenes
     # k12 <- overlay(k1, k2, fun = function(r1, r2) mean(c(r1, r2), na.rm = TRUE))
-    k12 <- raster::stack(k1, k2)
-    k12.mean <- mean(k12, na.rm = TRUE)
+    k12 <- raster::brick(k1, k2)
+    k12.mean <- calc(k12, fun = function(r) mean(r, na.rm = TRUE))
     names(k12.mean) <- names(k1); k12.mean <- setZ(k12.mean, z =  getZ(temp5)[k]) 
     k12.init <- raster::stack(k12.init, k12.mean)
     

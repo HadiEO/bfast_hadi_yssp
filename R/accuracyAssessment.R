@@ -1,12 +1,11 @@
 # The Landsat NDMI time stack --------------------------------------------- 
-NDMI.DG1 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds", sep = ""))
-NDMI.DG2 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds", sep = ""))
-NDMI.sq9 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_9.rds", sep = ""))
-NDMI.sq10 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_10.rds", sep = ""))
-NDMI.sq11 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_11.rds", sep = ""))
-NDMI.sq13 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_13.rds", sep = ""))
-NDMI.SC1 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds", sep = ""))
-
+NDMI.DG1.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_DG_1_unique.rds"))
+NDMI.DG2.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_DG_2_unique.rds"))
+NDMI.sq9.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_9_unique.rds"))
+NDMI.sq10.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_10_unique.rds"))
+NDMI.sq11.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_11_unique.rds"))
+NDMI.sq13.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_13_unique.rds"))
+NDMI.SC1.unique <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_SC_1_unique.rds"))
 
 
 # Now import the selected mesh points (= pixels) --------
@@ -20,6 +19,29 @@ selectLandsatPixels.sq11 <- readOGR(dsn = shp.folder, layer = "meshSelect_sq_11_
 selectLandsatPixels.sq13 <- readOGR(dsn = shp.folder, layer = "meshSelect_sq_13_label_ok")
 selectLandsatPixels.SC1 <- readOGR(dsn = shp.folder, layer = "meshSelect_SC_1_label_ok")
 selectLandsatPixels.addIntactForest.sq13 <- readOGR(dsn = shp.folder, layer = "meshSelect_sq_13_label_ok_addIntactForest")
+# TODO: combine sq13.addIntactForest to sq13
+
+
+# Recode reference change into DISTURBANCE (1) and NON-DISTURBANCE (0)
+selectLandsatPixels.DG1$Disturbance <- 0
+selectLandsatPixels.DG1[(selectLandsatPixels.DG1$Visual != "Intact (20020929 - 20150815)"), "Disturbance"] <- 1
+
+selectLandsatPixels.DG2$Disturbance <- 0
+selectLandsatPixels.DG2[(selectLandsatPixels.DG2$Visual != "Intact forest (20020929 - 20150808)"), "Disturbance"] <- 1
+
+selectLandsatPixels.sq9$Disturbance <- 0
+selectLandsatPixels.sq9[(selectLandsatPixels.sq9$Visual != "Intact forest 20020818-20140513"), "Disturbance"] <- 1
+
+selectLandsatPixels.sq10$Disturbance <- 1    # All acacia
+
+selectLandsatPixels.sq11$Disturbance <- 1    # All disturbed
+
+selectLandsatPixels.sq13$Disturbance <- 1   # All disturbed
+
+selectLandsatPixels.SC1$Disturbance <- 0
+selectLandsatPixels.SC1[(selectLandsatPixels.SC1$Visual != "Intact forest 20050726 - 20140204 "), "Disturbance"] <- 1
+
+selectLandsatPixels.addIntactForest.sq13$Disturbance <- 0  # All intact
 
 
 # Summary of the reference samples ----------------------------------------
@@ -33,23 +55,147 @@ table.SC1 <- table(selectLandsatPixels.SC1$Visual); write.csv2(table.SC1, paste(
 table.addIntactForest.sq13 <- table(selectLandsatPixels.addIntactForest.sq13$Visual); write.csv2(table.addIntactForest.sq13, paste(path, "/table/reference_addIntactForest_sq13.csv", sep = ""))
 
 
+# First and last date of VHSR ---------------------------------------------
+ref.firstDate <- list(DG1 = as.Date("2002-09-29"), DG2 = as.Date("2002-09-29"),
+                      sq9 = as.Date("2002-08-18"), sq10 = as.Date("2005-07-26"),
+                      sq11 = as.Date("2005-07-26"), sq13 = as.Date("2002-08-18"),
+                      SC1 = as.Date("2005-07-26"))
 
-# Extract the NDMI at select Landsat pixels --------------------------------
-extrNDMI.DG1 <- raster::extract(x = NDMI.DG1, y = selectLandsatPixels.DG1,                                 # DG1
-                                method = "simple",            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
-                                cellnumbers = TRUE, df = TRUE)
-
-extrNDMI.DG2 <- raster::extract(x = NDMI.DG2, y = selectLandsatPixels.DG2, method = "simple",              # DG2    
-                                cellnumbers = TRUE, df = TRUE)
-
-
-extrNDMI.DG1$pixId <- selectLandsatPixels.DG1$Id_1    # Add pixel ID
-extrNDMI.DG2$pixId <- selectLandsatPixels.DG2$Id_1
-
-extrNDMI.DG1$Visual <- selectLandsatPixels.DG1$Visual  # Add pixel visual interpretation
-extrNDMI.DG2$Visual <- selectLandsatPixels.DG2$Visual
+ref.lastDate <- list(DG1 = as.Date("2015-08-15"), DG2 = as.Date("2015-08-08"),
+                     sq9 = as.Date("2014-05-13"), sq10 = as.Date("2015-08-17"),
+                     sq11 = as.Date("2014-02-04"), sq13 = as.Date("2014-05-13"),
+                     SC1 = as.Date("2014-02-04"))
 
 
+
+# Extract the NDMI at select Landsat pixels and run BFAST Monitor --------------------------------
+
+
+attachBfmFlagToSp <- function(NDMI.unique, samples, firstDate, lastDate, extrOutName, bfmOutName) {
+  # NDMI.unique.sub <- subsetRasterTS(NDMI.unique, maxDate = lastDate)
+  # extrNDMI<- zooExtract(NDMI.unique.sub, samples, method = "simple")
+  # colnames(extrNDMI) <- as.character(samples$Id_1)
+  # write_rds(extrNDMI, extrOutName)
+  # # Create gap-less time series
+  # extrNDMI.ls <- as.list(extrNDMI)
+  # bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDMI.unique.sub), type = "irregular"))
+  # # Run BFAST Monitor
+  # jday.monitStart <- c(year(firstDate), yday(firstDate))
+  # bfm.TH.ls <- lapply(bts.ls,
+  #                     FUN = function(z) bfastmonitor(z, start = jday.monitStart,
+  #                                                   formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all"))
+  # write_rds(bfm.TH.ls, bfmOutName)
+  bfm.TH.ls <- read_rds(bfmOutName)
+  # Tell sample if BFAST detects DISTURBANCE (1) or NON-DISTURBANCE (0)
+  bfm.TH.magn.ls <- lapply(bfm.TH.ls, FUN = function(z) z$magnitude)
+  bfm.TH.dist.ls <- lapply(bfm.TH.ls, FUN = function(z) ifelse((is.na(z$breakpoint)) & (z$magnitude < 0), 0, 1))
+  for(i in 1:length(names(bfm.TH.dist.ls))) {
+    samples[which(samples$Id_1 == names(bfm.TH.dist.ls)[i]), "bfm.flag"] <- bfm.TH.dist.ls[[i]]
+    samples[which(samples$Id_1 == names(bfm.TH.dist.ls)[i]), "bfm.magn"] <- bfm.TH.magn.ls[[i]]
+  } 
+  # Record TP (true positive/disturbance) or FP
+  samples$TP <- 0
+  samples$FP <- 0
+  samples[which((samples$Disturbance == 1) & (samples$bfm.flag == 1)), "TP"] <- 1
+  samples[which((samples$Disturbance == 0) & (samples$bfm.flag == 1)), "FP"] <- 1
+  
+  # Return
+  return(samples)
+}
+
+DG1.bfmFlag <- attachBfmFlagToSp(NDMI.DG1.unique, selectLandsatPixels.DG1, ref.firstDate$DG1, ref.lastDate$DG1, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_DG1.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_DG1.rds"))
+
+DG2.bfmFlag <- attachBfmFlagToSp(NDMI.DG2.unique, selectLandsatPixels.DG2, ref.firstDate$DG2, ref.lastDate$DG2, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_DG2.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_DG2.rds"))
+
+sq9.bfmFlag <- attachBfmFlagToSp(NDMI.sq9.unique, selectLandsatPixels.sq9, ref.firstDate$sq9, ref.lastDate$sq9, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq9.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq9.rds"))
+
+sq10.bfmFlag <- attachBfmFlagToSp(NDMI.sq10.unique, selectLandsatPixels.sq10, ref.firstDate$sq10, ref.lastDate$sq10, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq10.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq10.rds"))
+
+sq11.bfmFlag <- attachBfmFlagToSp(NDMI.sq11.unique, selectLandsatPixels.sq11, ref.firstDate$sq11, ref.lastDate$sq11, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq11.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq11.rds"))
+
+sq13.bfmFlag <- attachBfmFlagToSp(NDMI.sq13.unique, selectLandsatPixels.sq13, ref.firstDate$sq13, ref.lastDate$sq13, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq13.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq13.rds"))
+
+SC1.bfmFlag <- attachBfmFlagToSp(NDMI.SC1.unique, selectLandsatPixels.SC1, ref.firstDate$SC1, ref.lastDate$SC1, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_SC1.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_SC1.rds"))
+
+sq13.addIntact.bfmFlag <- attachBfmFlagToSp(NDMI.sq13.unique, selectLandsatPixels.addIntactForest.sq13, ref.firstDate$sq13, ref.lastDate$sq13, 
+                                 extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq13_addIntact.rds"), 
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq13_addIntact.rds"))
+
+
+# Sample-based accuracy ---------------------------------------------------
+ref <- matrix(c(DG1.bfmFlag$Disturbance, DG2.bfmFlag$Disturbance, sq9.bfmFlag$Disturbance,
+                sq10.bfmFlag$Disturbance, sq11.bfmFlag$Disturbance, sq13.bfmFlag$Disturbance,
+                SC1.bfmFlag$Disturbance, sq13.addIntact.bfmFlag$Disturbance), ncol=1)
+pred <- matrix(c(DG1.bfmFlag$bfm.flag, DG2.bfmFlag$bfm.flag, sq9.bfmFlag$bfm.flag,
+                 sq10.bfmFlag$bfm.flag, sq11.bfmFlag$bfm.flag, sq13.bfmFlag$bfm.flag,
+                 SC1.bfmFlag$bfm.flag, sq13.addIntact.bfmFlag$bfm.flag), ncol=1)
+cm <- table(pred, ref)
+
+
+UA <- diag(cm) / rowSums(cm)
+PA <- diag(cm) / colSums(cm)
+
+sums <- vector()
+for(i in 1:dim(cm)[1]){
+  sums[i] <- cm[i,i]
+}
+OA <- sum(sums)/sum(cm)
+
+# How well small clearing is detected?
+DG1.bfmFlag.small <- DG1.bfmFlag[DG1.bfmFlag$Visual %in% c("Dirt road"), ]
+DG2.bfmFlag.small <- DG2.bfmFlag[DG2.bfmFlag$Visual %in% c("Forest partially cleared 20150808"), ]
+sq10.bfmFlag.small <- sq10.bfmFlag[sq10.bfmFlag$Visual %in% c("Acacia road (sub-pixel) from 20050726"), ]
+SC1.bfmFlag.small <- SC1.bfmFlag[SC1.bfmFlag$Visual %in% c("Very small clearing 20140204", "Small clearing 20140204"), ]
+
+ref.small <- matrix(c(DG1.bfmFlag.small$Disturbance, DG2.bfmFlag.small$Disturbance, sq10.bfmFlag.small$Disturbance,
+                SC1.bfmFlag.small$Disturbance), ncol=1)
+pred.small <- matrix(c(DG1.bfmFlag.small$bfm.flag, DG2.bfmFlag.small$bfm.flag, sq10.bfmFlag.small$bfm.flag,
+                       SC1.bfmFlag.small$bfm.flag), ncol=1)
+(cm.small <- table(pred.small, ref.small))
+
+# Magnitude of false positive vs true positive
+falseDist <- rbind(DG1.bfmFlag[which(DG1.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  DG2.bfmFlag[which(DG2.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  sq9.bfmFlag[which(sq9.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  sq10.bfmFlag[which(sq10.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  sq11.bfmFlag[which(sq11.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  sq13.bfmFlag[which(sq13.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  SC1.bfmFlag[which(SC1.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data,
+                  sq13.addIntact.bfmFlag[which(sq13.addIntact.bfmFlag$FP == 1), c("Visual", "bfm.magn")]@data)
+
+trueDist <- rbind(DG1.bfmFlag[which(DG1.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  DG2.bfmFlag[which(DG2.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  sq9.bfmFlag[which(sq9.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  sq10.bfmFlag[which(sq10.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  sq11.bfmFlag[which(sq11.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  sq13.bfmFlag[which(sq13.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  SC1.bfmFlag[which(SC1.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data,
+                  sq13.addIntact.bfmFlag[which(sq13.addIntact.bfmFlag$TP == 1), c("Visual", "bfm.magn")]@data)
+
+x11()
+hist(trueDist$bfm.magn, col = "grey70", xlab = "Change magnitude", ylab = "No. of reference samples")
+hist(falseDist$bfm.magn, add = TRUE, col = "grey20")
+legend()
+
+
+x11()
+par(mfrow = c(2,1))
+hist(trueDist$bfm.magn, main = "TP")
+hist(falseDist$bfm.magn, main = "FP")
 
 # Todo: -------------------------------------------------------------------
 

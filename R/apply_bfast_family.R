@@ -1,38 +1,37 @@
 # The Landsat NDMI time stack
-list.files("sample_data/data3/rds")
-NDMI.DG1 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds")
-NDMI.DG2 <- read_rds("sample_data/data3/rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds")
-NDMI.SC1 <- read_rds(paste(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds", sep = ""))
+NDMI.DG1 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_KalArea1_selectDG_1.rds"))
+NDMI.DG2 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_KalArea1_selectDG_2.rds"))
+NDMI.SC1 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_SC_1.rds"))
 NDMI.SQ9 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_9.rds"))
+NDMI.SQ10 <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/NDMITimeStack_L578_sq_10.rds"))
 
 
 # Go to arcmap, make mesh polygons and points from the Landsat pixels, select example polygons (= pixels) [DONE]
 # Now import the selected mesh points (= pixels) to extract the time series
 selectLandsatPixels.DG1 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG1_label_ok")
 selectLandsatPixels.DG2 <- readOGR(dsn = "sample_data/data3/shp", layer = "meshSelect_prevDG2_label_ok")
-selectLandsatPixels.SQ9 <- readOGR(dsn = str_c(),
-                                   layer = "meshSelect_prevDG2_label_ok")
+selectLandsatPixels.SQ9 <- readOGR(dsn = str_c(path, "/vector_data"),
+                                   layer = "meshSelect_sq_9_label_ok")
 
 # Todo: use sf object instead of sp. 
+
+#################################################################################################################
+# Specify which NDMI stack and selectLandsatPixels --------------------------------
+##################################################################################################################
+NDMI <- NDMI.SQ10
+# refPixels <- selectLandsatPixels.SQ9
+
 
 #################################################################################################################
 # Extract the NDMI at select Landsat pixels --------------------------------
 ##################################################################################################################
 
-extrNDMI.DG1 <- raster::extract(x = NDMI.DG1, y = selectLandsatPixels.DG1,                                 # DG1
+extrNDMI <- raster::extract(x = NDMI, y = refPixels,                                 # DG1
                                   method = "simple",            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
                                   cellnumbers = TRUE, df = TRUE)
 
-extrNDMI.DG2 <- raster::extract(x = NDMI.DG2, y = selectLandsatPixels.DG2, method = "simple",              # DG2    
-                                cellnumbers = TRUE, df = TRUE)
 
-
-extrNDMI.DG1$pixId <- selectLandsatPixels.DG1$Id_1    # Add pixel ID
-extrNDMI.DG2$pixId <- selectLandsatPixels.DG2$Id_1
-
-extrNDMI.DG1$Visual <- selectLandsatPixels.DG1$Visual  # Add pixel visual interpretation
-extrNDMI.DG2$Visual <- selectLandsatPixels.DG2$Visual
-
+extrNDMI$pixId <- refPixels$Id_1    # Add pixel ID
 
 #################################################################################################################
 # Plot and print the time series --------------------------------
@@ -74,10 +73,9 @@ for(k in seq(1, 12, by = 4)) {
 #################################################################################################################
 # Apply BFAST to individual time series  --------------------------------
 ##################################################################################################################
-which.extrTS <- extrNDMI.DG1                   # time series in Which DG scene?
 which.pixId <- 677                             # which pixel ID?  
 
-temp.TS <- unlist(which.extrTS[which.extrTS$pixId == which.pixId, -c(1,2,ncol(which.extrTS),ncol(which.extrTS)-1)])
+temp.TS <- unlist(extrNDMI[extrNDMI$pixId == which.pixId, -c(1,2,ncol(extrNDMI),ncol(extrNDMI)-1)])
 temp.TS.df <- tibble(date = getSceneinfo(names(temp.TS))$date,
                      value = unname(temp.TS))
 
@@ -162,89 +160,76 @@ bf
 # Run BFAST Spatial to all pixels --------------------------------
 ##################################################################################################################
 # Need to make each raster layer is unique data, so average (na.rm = T) the raster when date is same
+NDMI.uniqueDates <- makeUniqueDates(x = NDMI, sensor = "Landsat", collection = "Not Tier 1")
+# If this returns error, it can be that the dates are already unique
+write_rds(NDMI.uniqueDates, str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_10_unique.rds"))
 
-temp <- table(getZ(NDMI.SC1)); temp <- as_tibble(temp)           # There are dates with multiple layers
-# Insert check if table(temp$n) shows only unique value 1, then no multiple dates
-
-temp2 <- names(NDMI.SC1)                # the layer names are unique
-temp3 <- temp[temp$n > 1,]              # Z attribute = dates with multiple layers
-temp4 <- which(as.character(getZ(NDMI.SC1)) %in% temp3$Var1)    # Which layer number (ordered) belongs to the dates with multiple layers?
-temp5 <- subset(NDMI.SC1, temp4)
-temp6 <- which(!as.character(getZ(NDMI.SC1)) %in% temp3$Var1)   # Which layer number (ordered) NOT belongs to the dates with multiple layers?
-temp7 <- subset(NDMI.SC1, temp6)
-
-# Take the mean of duplicated dates
-k12.init <- temp5[[1]]; k12.init <- setZ(k12.init, z =  getZ(temp5)[1])      # Initialize storage variable
-k12.init[] <- NA
-names(k12.init) <- "init"
-
-for(k in seq(1, nlayers(temp5), by = 2)) {     
-  
-  k1 <- temp5[[k]]; k1 <- setZ(k1, z = getZ(temp5)[k])
-  k2 <- temp5[[k+1]]; k2 <- setZ(k2, z =  getZ(temp5)[k+1])                           # This works because each dates have exactly two scenes
-  k12 <- stack(k1, k2)
-  k12.mean <- mean(k12, na.rm = TRUE)
-  names(k12.mean) <- names(k1); k12.mean <- setZ(k12.mean, z =  getZ(temp5)[k]) 
-  k12.init <- stack(k12.init, k12.mean)
-  
-}
-
-
-k12.init <- subset(k12.init, 2:nlayers(k12.init))   # Remove the first layer i.e. init
-
-
-NDMI.SC1.uniqueDates <- stack(temp7, k12.init)      # Merge back with images with one date (temp7)
-
-# SetZ and Re-order layers by dates
-NDMI.SC1.uniqueDates <- setZ(NDMI.SC1.uniqueDates, getSceneinfo(names(NDMI.SC1.uniqueDates))$date, name = 'time')   
-View(table(getZ(NDMI.SC1.uniqueDates)))
-
-NDMI.SC1.uniqueDates <- subset(NDMI.SC1.uniqueDates, order(getZ(NDMI.SC1.uniqueDates)))
-getZ(NDMI.SC1.uniqueDates)
-
-# If no duplicated dates
-NDMI.SC1.uniqueDates <- NDMI.SC1
+# If no duplicated dates, NDMI.uniqueDates <- NDMI
 
 # Run BFAST Spatial 
-time.SC1 <- system.time(
-  bfmArea.SC1 <- bfmSpatial(NDMI.SC1.uniqueDates, start = c(2005, 1), order = 1, h = 0.25, 
-                            formula = response ~ harmon, history = "all",                    
-                            monend = c(2014,35)) # c(2015,221)                                           # Set end monitoring period to 8 Aug 2015
+# Todo: the years in the jday.monitStart need 
+DG.firstDate <- as.Date("2010-11-13")
+DG.lastDate <- as.Date("2015-08-15")
+jday.monitStart <- c(year(DG.firstDate), yday(DG.firstDate))          # Date of earliest VHSR showing still forested area
+jday.monitEnd <- c(year(DG.lastDate),yday(DG.lastDate))             # Date of latest VHSR
+time <- system.time(  # Check formula!
+  bfmArea <- bfmSpatial(NDMI.uniqueDates, start = jday.monitStart, order = 1, h = 0.25, 
+                            formula = response ~ harmon + trend, history = "all",                    
+                            monend = jday.monitEnd)
 )
-
+# Takes 8 mins!
+write_rds(bfmArea, str_c(path, "/change_map/bfmSpatial_DG1_start2010.rds"))   # Output filename!
 
 # Change date
-change <- raster(bfmArea.SC1, 1)
+change <- raster(bfmArea, 1)
 # x11()
 raster::plot(change)
+change.year <- as.integer(change)
+
+# Raster of change and no-change
+# binary.change <- change
+# binary.change[is.na(binary.change)] <- 0
+# binary.change[!is.na(binary.change)] <- 1
 
 # Write to disk
-writeRaster(change, filename = paste(path, "/change_map/bfmSpatial_SC1_date.tif", sep = ""), format = "GTiff")
+writeRaster(change.year, filename = paste(path, "/change_map/bfmSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
+# writeRaster(binary.change, filename = paste(path, "/change_map/bfmSpatial_DG1_binary.tif", sep = ""), format = "GTiff")
 
 
 # Change magnitude
-magn <- raster(bfmArea.SC1, 2)                                    
+magn <- raster(bfmArea, 2)                                    
 magn.bkp <- magn                    # make a version showing only breakpoint pixels
 magn.bkp[is.na(change)] <- NA
 
-x11()
+# x11()
 op <- par(mfrow=c(1, 2))
-plot(magn.bkp, main="Magnitude: breakpoints")
-plot(magn, main="Magnitude: all pixels")
+raster::plot(magn.bkp, main="Magnitude: breakpoints")
+raster::plot(magn, main="Magnitude: all pixels")
+
+# Write to disk
+writeRaster(magn.bkp, filename = paste(path, "/change_map/bfmSpatial_DG1_magn.tif", sep = ""), format = "GTiff")
 
 
 #################################################################################################################
 # Apply REGROWTH to all pixels  --------------------------------
 ##################################################################################################################
 # Cut NDMI.DG1.uniqueDates raster time stack to 8 Aug 2015
-NDMI.DG1.uniqueDates.trim <- subsetRasterTS(NDMI.DG1.uniqueDates, 
-                                            maxDate = c(2015,221))
+NDMI.uniqueDates.trim <- subsetRasterTS(NDMI.uniqueDates, 
+                                            maxDate = jday.monitEnd)
 
-time.DG1.reg <- system.time(
-  regrowArea.DG1 <- regSpatial(NDMI.DG1.uniqueDates.trim, change = bfmArea.DG1$breakpoint, h = 0.5, type = "16-day") 
+time.reg <- system.time(
+  regrowArea <- regSpatial(NDMI.uniqueDates.trim, change = bfmArea$breakpoint, h = 0.5, type = "irregular") 
 )
 
-plot(regrowArea.DG1)
+raster::plot(regrowArea)
+
+# Write to disk
+write_rds(regrowArea, str_c(path, "/change_map/regSpatial_DG1_end2015.rds"))
+
+# Date of regrowth
+regYear <- as.integer(regrowArea$regrowth_onset)
+regYear[regYear == -9999] <- NA
+writeRaster(regYear, filename = paste(path, "/change_map/regSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
 
 
 
