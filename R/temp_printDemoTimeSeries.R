@@ -23,9 +23,14 @@ write_rds(extrNDMI, str_c(path, "/extracted_time_series/extrNDMIsub_DG1_demo.rds
 # Create gap-less time series
 extrNDMI.ls <- as.list(extrNDMI)
 # demo.bts <- bfastts(extrNDMI[, "B5"], dates = getZ(NDMI.unique.sub), type = "irregular")
-demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDMI.unique.sub), type = "irregular"))
+demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = time(z), type = "irregular"))
 
-                  
+# UPDATE: remove dips (1%)
+# test <- demo.bts.ls$B1
+# test <- removedips(test)
+
+demo.bts.ls <- lapply(demo.bts.ls, removedips)
+
 # Run bfastmonitor 
 DG.firstDate <- as.Date("2002-09-29")
 DG.lastDate <- as.Date("2015-08-15")
@@ -36,7 +41,7 @@ demo.bfm.TH.ls <- lapply(demo.bts.ls,
                           formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all"))
 
 # Plot bfm result
-x11()
+
 my.bfmPlot.1 <- bfmPlot(list(demo.bfm.TH.ls$A1, demo.bfm.TH.ls$A2, demo.bfm.TH.ls$A3),
         plotlabs = c("A1", "A2", "A3"), ncols = 1, displayMagn = TRUE) + 
   theme_bw() + labs(y = "NDMI", x = "Date") + scale_y_continuous(limits = c(-0.2, 0.6)) +
@@ -63,13 +68,13 @@ my.bfmPlot.3 <- bfmPlot(demo.bfm.TH.ls.C,
 
 
 # Save plots
-ggsave("bfmPlot_DG1_demo_A_start2002.pdf", plot = my.bfmPlot.1, device = "pdf",
+ggsave("bfmPlot_DG1_demo_A_start2002_rmDips.pdf", plot = my.bfmPlot.1, device = "pdf",
        path = str_c(path, "/prelim_figs/pdf"), width = 180, height = 40*3, unit = "mm")
 
-ggsave("bfmPlot_DG1_demo_B_start2002.pdf", plot = my.bfmPlot.2, device = "pdf",
+ggsave("bfmPlot_DG1_demo_B_start2002_rmDips.pdf", plot = my.bfmPlot.2, device = "pdf",
        path = str_c(path, "/prelim_figs/pdf"), width = 180, height = 40*5, unit = "mm")
 
-ggsave("bfmPlot_DG1_demo_C.pdf", plot = my.bfmPlot.3, device = "pdf",
+ggsave("bfmPlot_DG1_demo_C_rmDips.pdf", plot = my.bfmPlot.3, device = "pdf",
        path = str_c(path, "/prelim_figs/pdf"), width = 180, height = 40*2, unit = "mm")
 
 
@@ -196,6 +201,33 @@ ggsave("bfmPlot_DG2_demo_BR.pdf", plot = my.bfmPlot.BR, device = "pdf",
        path = str_c(path, "/prelim_figs/pdf"), width = 180, height = 40*2, unit = "mm")
 
 
+# Plot example natural revegetation
+extrNDMI.1.ls <- as.list(extrNDMI.1)
+extrNDMI.1$N1
+extrNDMIsub_DG2 <- read_rds(str_c(path, "/extracted_time_series/extrNDMIsub_DG2.rds"))
+extrNDMIsub_DG2 <- as.list(extrNDMIsub_DG2)
+
+# Plot raw times series
+default.par <- par()
+v <- as.numeric(as.Date(paste0(seq(1988,2016,by=1),'-01-01')))
+
+pdf(str_c(path, "/prelim_figs/pdf", "/tsPlot_DG2_NsmallDemo.pdf"), width = 7.4, height = 6)
+par(mfrow = c(3,1), oma = c(0, 0, 0, 0), mai = c(0.45, 0.35, 0.1, 0.1),
+    ps = 12, mgp = c(1.7, 0.5, 0), mar =c(2.7, 2.6, 0.5, 0.5))
+plot(extrNDMI.1$N1, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))
+abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
+plot(extrNDMIsub_DG2$`498`, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))    ## N2
+abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
+plot(extrNDMIsub_DG2$`576`, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))
+abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
+
+dev.off()
+
+
+
+
+
+
 #################################################################################################################
 # DG1 with segmentation --------------------------------
 ##################################################################################################################
@@ -206,19 +238,21 @@ demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
 #   bf <- bfast(demo.bts.ls.int$B1, h = 0.15, season = "harmonic", max.iter = 1, breaks = 1)
 # )
 
-t.bf01 <- system.time(
-  # bf01 <- lapply(demo.bts.ls.int, FUN = function(z) bfast01(z, order = 1, bandwidth = 0.15))
-  bf01_h25 <- lapply(demo.bts.ls.int, FUN = function(z) bfast01(z, order = 1, bandwidth = 0.25))
-)
+# t.bf01 <- system.time(
+#   # bf01 <- lapply(demo.bts.ls.int, FUN = function(z) bfast01(z, order = 1, bandwidth = 0.15))
+#   bf01_h25 <- lapply(demo.bts.ls.int, FUN = function(z) bfast01(z, order = 1, bandwidth = 0.25))
+# )
 
 # write_rds(bf01, str_c(path, "/extracted_time_series/bf01_extrNDMIsub_DG1_demo.rds"))
-write_rds(bf01_h25, str_c(path, "/extracted_time_series/bf01h25_extrNDMIsub_DG1_demo.rds"))
+# write_rds(bf01_h25, str_c(path, "/extracted_time_series/bf01h25_extrNDMIsub_DG1_demo.rds"))
+bf01_h25 <- read_rds(str_c(path, "/extracted_time_series/bf01h25_extrNDMIsub_DG1_demo.rds"))
 
-pdf(str_c(path, "/prelim_figs/pdf", "/bf01Plot_DG1_demo.pdf"), width = 7.4, height = 7.5)
-par(mfrow = c(3,1))
-plot(bf01_h25$B4, regular = TRUE, ylim = c(-0.2, 0.6), main = "B4", ylab = "NDMI", xlab = "Date")
-plot(bf01_h25$B5, regular = TRUE, ylim = c(-0.2, 0.6), main = "B5", ylab = "NDMI", xlab = "Date")
-plot(bf01_h25$A1, regular = TRUE, ylim = c(-0.2, 0.6), main = "A1", ylab = "NDMI", xlab = "Date")
+pdf(str_c(path, "/prelim_figs/pdf", "/bf01Plot_DG1_demo.pdf"), width = 7.4, height = 6)
+par(mfrow = c(3,1), oma = c(0, 0, 0, 0), mai = c(0.45, 0.35, 0.1, 0.1),
+    ps = 12, mgp = c(1.7, 0.5, 0), mar =c(2.7, 2.6, 0.5, 0.5))
+plot(bf01_h25$B4, regular = TRUE, ylim = c(-0.2, 0.6), ylab = "NDMI", xlab = "")
+plot(bf01_h25$B5, regular = TRUE, ylim = c(-0.2, 0.6), ylab = "NDMI", xlab = "")
+plot(bf01_h25$A1, regular = TRUE, ylim = c(-0.2, 0.6), ylab = "NDMI", xlab = "Date")
 dev.off()
 
 
@@ -245,6 +279,7 @@ extrNDMI <- bfastSpatial::zooExtract(x = NDMI.unique.sub,
                                      method = "simple")            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
 colnames(extrNDMI) <- as.character(demoPixels$DemoId)
 write_rds(extrNDMI, str_c(path, "/extracted_time_series/extrNDMIsub_sq10_demo.rds"))
+extrNDMI <- read_rds(str_c(path, "/extracted_time_series/extrNDMIsub_sq10_demo.rds"))
 
 # Create gap-less time series
 extrNDMI.ls <- as.list(extrNDMI)
@@ -255,15 +290,16 @@ demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDM
 default.par <- par()
 v <- as.numeric(as.Date(paste0(seq(1988,2016,by=1),'-01-01')))
 
-pdf(str_c(path, "/prelim_figs/pdf", "/tsPlot_sq10_demo.pdf"), width = 7.4, height = 10)
-par(mfrow = c(4,1))
-plot(extrNDMI.ls$P1, type = "p", pch = 19, xlab = "Date", ylab = "NDMI", ylim = c(-0.3, 0.7), main = "P1")
+pdf(str_c(path, "/prelim_figs/pdf", "/tsPlot_sq10_demo.pdf"), width = 7.4, height = 8)
+par(mfrow = c(4,1), oma = c(0, 0, 0, 0), mai = c(0.45, 0.35, 0.1, 0.1),
+    ps = 12, mgp = c(1.7, 0.5, 0), mar =c(2.7, 2.6, 0.5, 0.5))
+plot(extrNDMI.ls$P1, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))
 abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
-plot(extrNDMI.ls$P2, type = "p", pch = 19, xlab = "Date", ylab = "NDMI", ylim = c(-0.3, 0.7), main = "P2")
+plot(extrNDMI.ls$P2, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))
 abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
-plot(extrNDMI.ls$P3, type = "p", pch = 19, xlab = "Date", ylab = "NDMI", ylim = c(-0.3, 0.7), main = "P3")
+plot(extrNDMI.ls$P3, type = "p", pch = 19, xlab = "", ylab = "NDMI", ylim = c(-0.3, 0.7))
 abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
-plot(extrNDMI.ls$P4, type = "p", pch = 19, xlab = "Date", ylab = "NDMI", ylim = c(-0.3, 0.7), main = "P4")
+plot(extrNDMI.ls$P4, type = "p", pch = 19, xlab = "Date", ylab = "NDMI", ylim = c(-0.3, 0.7))
 abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
 
 dev.off()

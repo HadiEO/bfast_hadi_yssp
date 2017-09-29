@@ -88,9 +88,11 @@ attachBfmFlagToSp <- function(NDMI.unique, samples, firstDate, lastDate, extrOut
   bfm.TH.ls <- read_rds(bfmOutName)
   # Tell sample if BFAST detects DISTURBANCE (1) or NON-DISTURBANCE (0)
   bfm.TH.magn.ls <- lapply(bfm.TH.ls, FUN = function(z) z$magnitude)
-  bfm.TH.dist.ls <- lapply(bfm.TH.ls, FUN = function(z) ifelse((is.na(z$breakpoint)) & (z$magnitude < 0), 0, 1))
+  bfm.TH.dist.ls <- lapply(bfm.TH.ls, FUN = function(z) ifelse(!is.na(z$breakpoint), 1, 0))
+  bfm.TH.dist.ls.rev <- lapply(bfm.TH.ls, FUN = function(z) ifelse((!is.na(z$breakpoint)) & (z$magnitude < 0), 1, 0))
   for(i in 1:length(names(bfm.TH.dist.ls))) {
     samples[which(samples$Id_1 == names(bfm.TH.dist.ls)[i]), "bfm.flag"] <- bfm.TH.dist.ls[[i]]
+    samples[which(samples$Id_1 == names(bfm.TH.dist.ls.rev)[i]), "bfm.flag.rev"] <- bfm.TH.dist.ls.rev[[i]]
     samples[which(samples$Id_1 == names(bfm.TH.dist.ls)[i]), "bfm.magn"] <- bfm.TH.magn.ls[[i]]
   } 
   # Record TP (true positive/disturbance) or FP
@@ -140,9 +142,9 @@ sq13.addIntact.bfmFlag <- attachBfmFlagToSp(NDMI.sq13.unique, selectLandsatPixel
 ref <- matrix(c(DG1.bfmFlag$Disturbance, DG2.bfmFlag$Disturbance, sq9.bfmFlag$Disturbance,
                 sq10.bfmFlag$Disturbance, sq11.bfmFlag$Disturbance, sq13.bfmFlag$Disturbance,
                 SC1.bfmFlag$Disturbance, sq13.addIntact.bfmFlag$Disturbance), ncol=1)
-pred <- matrix(c(DG1.bfmFlag$bfm.flag, DG2.bfmFlag$bfm.flag, sq9.bfmFlag$bfm.flag,
-                 sq10.bfmFlag$bfm.flag, sq11.bfmFlag$bfm.flag, sq13.bfmFlag$bfm.flag,
-                 SC1.bfmFlag$bfm.flag, sq13.addIntact.bfmFlag$bfm.flag), ncol=1)
+pred <- matrix(c(DG1.bfmFlag$bfm.flag.rev, DG2.bfmFlag$bfm.flag.rev, sq9.bfmFlag$bfm.flag.rev,
+                 sq10.bfmFlag$bfm.flag.rev, sq11.bfmFlag$bfm.flag.rev, sq13.bfmFlag$bfm.flag.rev,
+                 SC1.bfmFlag$bfm.flag.rev, sq13.addIntact.bfmFlag$bfm.flag.rev), ncol=1)
 cm <- table(pred, ref)
 
 

@@ -14,15 +14,16 @@ my_dates <- readRDS(file = "C:/LocalUserData/User-data/hadi1/PHD_RESEARCH/STUDY_
 
 #Plot the first layer in the raster stack
 
-plot (raster(re_test, 1))
+x11()
+raster::plot(raster(re_testx, 1))
 
 ## We start the monitoring in 2016. Note this may take long, depending on your computer 
 
 
 ## sequential processing example:
 
-rad <- spatial.tools::rasterEngine(inraster=re_testx, fun=stef_monitor,window_dims=c(windowwidth=15,windowwidth =15),
-                    args=list(mYear = 2016,density = F,my_dates =my_dates,threshold = 0.05,spatiaNormPercentile =95, windowwidth=9,tryCatchError=F))
+# rad <- spatial.tools::rasterEngine(inraster=re_testx, fun=stef_monitor,window_dims=c(windowwidth=15,windowwidth =15),
+#                     args=list(mYear = 2016,density = F,my_dates =my_dates,threshold = 0.05,spatiaNormPercentile =95, windowwidth=9,tryCatchError=F))
 
 
 ## paralell processing example:
@@ -40,14 +41,14 @@ t <- system.time(
 
 sfQuickStop()
 
- 
+write_rds(rad, "C:/LocalUserData/User-data/hadi1/PHD_RESEARCH/STUDY_IIASA/example_codes/rad_inExSTEFmonitor.rds")
 
 # use random forest model to calculate the probability of forest --------
 # disturbance
 
 ## read the training data (this data set was used by Hamunyela et al (2017))
 
-training_data <- readRDS(file = "data/trainingData.rds") # RC ==Real change; FC == False change
+training_data <- readRDS(file = "C:/LocalUserData/User-data/hadi1/PHD_RESEARCH/STUDY_IIASA/example_codes/trainingData.rds") # RC ==Real change; FC == False change
 
 # set the seed and training the random forest model
 set.seed(100)

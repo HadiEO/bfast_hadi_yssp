@@ -69,15 +69,16 @@ print.plotts <- function(k) {
   which.id <- intact.ids$Id_1[k]
   tlndmi <- bfastts(extrNDMI.DG1[, as.character(which.id)], dates = getZ(NDMI.DG1.unique.subset), type = "irregular")
   ts1vh <- bfastts(extrVH.DG1[, as.character(which.id)], dates = getZ(S1.VH_DG1.unique), type = "irregular")  
-  bayts::plotts(tsL = list(tlndmi, ts1vh), labL = list("Landsat NDMI", "Sentinel-1 VH [dB]"))   # ylimL = list(c(-0.2,0.8), c(-19,-6))
+  bayts::plotts(tsL = list(tlndmi, ts1vh), labL = list("Landsat NDMI", "Sentinel-1 VH [dB]"), xlab = "Date")   # ylimL = list(c(-0.2,0.8), c(-19,-6))
 }
 
 # length(intact.ids$Id_1)
 for(k in seq(1, 17, by = 4)) {                                                                                 # just do manually for now
   filename <- str_c(k, "_", k+3, ".pdf")
   pdf(str_c(path, "/prelim_figs/pdf/", filename),    # Change output dir here
-      width = 7, height = 9, pointsize = 10)  
-  par(mfrow = c(4,1))
+      width = 7, height = 8, pointsize = 10)  
+  par(mfrow = c(4,1), oma = c(0, 0, 0, 0), mai = c(0.45, 0.35, 0.1, 0.1),
+      ps = 10, mgp = c(1.7, 0.5, 0), mar =c(2.7, 2.7, 0.5, 0.5))
   
   for(x in k:(k+3)) print.plotts(x)                   
   dev.off()

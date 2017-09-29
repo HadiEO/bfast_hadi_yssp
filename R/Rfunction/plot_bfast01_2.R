@@ -1,7 +1,7 @@
 plot_bfast01_2 <- function(x, breaks = NULL, which = c("response", "fitted", "trend"),
                          plot.type = "single", panel = NULL, screens = NULL,
                          col = NULL, lwd = NULL,
-                         main = "", xlab = "Time", ylab = NULL, ci = NULL, regular = TRUE, v, ...)
+                         main = "", xlab = "Time", ylab = NULL, ci = NULL, regular = TRUE, ...)
 {
   ## set up zoo series and select series to be plotted
   breaks <- .breaks01(x, breaks)
@@ -50,7 +50,7 @@ plot_bfast01_2 <- function(x, breaks = NULL, which = c("response", "fitted", "tr
   
   plot(z, plot.type = plot.type, panel = panel, screens = screens,
        col = col, lwd = lwd, main = main, xlab = xlab, ylab = ylab, ...)
-  abline(v = v,lty = "dotted",col = "grey20",lwd = 1)
+  points()
 }
 
 
