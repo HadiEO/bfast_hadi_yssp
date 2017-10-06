@@ -29,14 +29,15 @@ demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = time(z),
 # test <- demo.bts.ls$B1
 # test <- removedips(test)
 
-demo.bts.ls <- lapply(demo.bts.ls, removedips)
+demo.bts.ls.rmDips <- lapply(demo.bts.ls, removedips)
+
 
 # Run bfastmonitor 
 DG.firstDate <- as.Date("2002-09-29")
 DG.lastDate <- as.Date("2015-08-15")
 jday.monitStart <- c(year(DG.firstDate), yday(DG.firstDate))          # Date of earliest VHSR showing still forested area
 
-demo.bfm.TH.ls <- lapply(demo.bts.ls, 
+demo.bfm.TH.ls <- lapply(demo.bts.ls,   # change back to demo.bts.ls !
         FUN = function(z) bfastmonitor(z, start = jday.monitStart, 
                           formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all"))
 
@@ -223,9 +224,32 @@ abline(v = v,lty = "dotted",col = "gray20",lwd = 1)
 
 dev.off()
 
+# Demo regrowth to demo.bts.1.ls$N1
+N1.bfm <- bfastmonitor(demo.bts.1.ls$N1, start = c(2005,1),    ## Set arbitarily to c(2005,1) to demo regrowth
+                      formula = response~harmon+trend, order = 6, plot = FALSE, h = 0.25, history = "all", level = 0.05)
+N1.reg <- tsreg(x = as.numeric(extrNDMI.1$N1), change = N1.bfm$breakpoint, dates = getZ(NDMI.unique.sub),
+                type = "irregular", h = 0.5, formula = response~harmon+trend, 
+                plot = TRUE, ylabs = c("NDMI", "|MOSUM|"))            
+print(N1.reg)
+
+source("R/Rfunction/plot_tsreg_mod.R")
+pdf(str_c(path, "/prelim_figs/pdf", "/regrow_DG1_smallDemo_N1.pdf"), width = 7.4, height = 3)
+plot.tsreg.mod(N1.reg, ylabs = c("NDMI", "|MOSUM|"))
+dev.off()
 
 
 
+## Monitor regrowth until the latest obs in 2017
+extrNDMI.1.up17 <- bfastSpatial::zooExtract(x = NDMI.unique,   
+                                       sample = demoPixels.1,
+                                       method = "simple")            # no need buffer to account geometric error cause we are concerned with pixel-specific time series and relative changes
+colnames(extrNDMI.1.up17) <- as.character(demoPixels.1$DemoID)
+extrNDMI.1.up17 <- as.list(extrNDMI.1.up17)
+
+N1.reg <- tsreg(x = as.numeric(extrNDMI.1.up17$N1), change = N1.bfm$breakpoint, dates = getZ(NDMI.unique),
+                type = "irregular", h = 0.5, formula = response~harmon+trend, 
+                plot = TRUE, ylabs = c("NDMI", "|MOSUM|"))            
+print(N1.reg)
 
 
 #################################################################################################################
@@ -234,9 +258,43 @@ dev.off()
 demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDMI.unique.sub), type = "irregular"))
 demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
 
-# t.segment <- system.time(
-#   bf <- bfast(demo.bts.ls.int$B1, h = 0.15, season = "harmonic", max.iter = 1, breaks = 1)
-# )
+# Make monthly time series
+require(xts)
+temp <- demo.bts.ls.int$P1                         # Which time series to demo
+temp.xts <- xts(as.numeric(temp), 
+                date_decimal(index(temp)))
+temp.month <- apply.monthly(temp.xts, FUN=mean)
+
+# Need to convert back to ts for bfast
+temp.month.ts <- ts(as.numeric(temp.month), start = c(year(start(temp.month)),month(start(temp.month))), 
+                    frequency = 12)     # Freq = 12 cause monthly, 23 if 16-days
+
+
+# Parallelize
+# detectCores()
+# cl <- makeCluster(3)                                     
+# registerDoParallel(cl)
+# getDoParWorkers()
+# clusterEvalQ(cl, .libPaths("C:/Program Files/R/R-3.3.1/library"))
+# clusterEvalQ(cl, library(doParallel))
+
+t.segment <- system.time(
+  bf <- bfast(temp.month.ts, h = 0.15, season = "harmonic", max.iter = 1, hpc = "foreach")
+)
+
+# stopCluster(cl)  
+
+plot(bf, type="trend", largest=TRUE, main = "Sample P1, Fig. 13 in report")
+
+plot(bf)
+plot(bf, sim = temp.month.ts)
+plot(bf, ANOVA=TRUE)
+plot(bf,type="all")
+
+niter <- length(bf$output)
+out <- bf$output[[niter]]
+
+
 
 # t.bf01 <- system.time(
 #   # bf01 <- lapply(demo.bts.ls.int, FUN = function(z) bfast01(z, order = 1, bandwidth = 0.15))

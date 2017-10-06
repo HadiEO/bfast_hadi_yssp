@@ -16,7 +16,7 @@ NDMI.sub.dates.dec <- decimal_date(NDMI.sub.dates)
 
 # Run stef_monitor
 sfQuickInit(cpus = 4)                        ## register the cores
-
+  
 t.mySTEF <- system.time(
   res.STEF <- rasterEngine(inraster = NDMI.sub, 
                       fun = stef_monitor, window_dims = c(windowwidth=9, windowwidth=9),
@@ -30,3 +30,6 @@ sfQuickStop()                               ## unregister the cores
 x11()
 raster::plot(res.STEF$layer.1)
 summary(res.STEF)
+
+
+

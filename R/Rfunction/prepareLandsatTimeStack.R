@@ -12,7 +12,12 @@ prepareLandsatTimeStack <- function(imgTimeStack_L5, imgTimeStack_L7, imgTimeSta
   # Stack across sensors
   imgTimeStack_L578 <- addLayer(imgTimeStack_L5, imgTimeStack_L7, imgTimeStack_L8)
 
-  imgTimeStack_L578 <- setZ(imgTimeStack_L578, getSceneinfo(names(imgTimeStack_L578))$date, name = 'time')    # Set time attribute in z slot
+  if(collection == "Tier 1") {
+    dates <- as.Date(substr(names(imgTimeStack_L578), 13, 20), format = "%Y%m%d")
+    imgTimeStack_L578 <- setZ(imgTimeStack_L578, dates, name = "time")
+  } else if(collection == "Not Tier 1") {
+    imgTimeStack_L578 <- setZ(imgTimeStack_L578, getSceneinfo(names(imgTimeStack_L578))$date, name = 'time')    # Set time attribute in z slot
+  }
  
   # Sort raster layers by dates
   imgTimeStack_L578 <- subset(imgTimeStack_L578, order(getZ(imgTimeStack_L578)))

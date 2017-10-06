@@ -26,6 +26,9 @@ require(doParallel)
 require(spatial.tools)
 require(STEF)
 require(bayts)
+require("doSNOW")                                 # <-------------------------------- Set up parallelization
+require("doParallel")
+source("R/Rfunction/removedips.R")
 
 
 
