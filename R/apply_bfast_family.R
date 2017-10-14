@@ -166,19 +166,31 @@ write_rds(NDMI.uniqueDates, str_c(path, "/raster_time_stack/ndmi_rds/ndmi_sq_10_
 
 # If no duplicated dates, NDMI.uniqueDates <- NDMI
 
-# Run BFAST Spatial 
+
+# Load saved data
+NDMI.uniqueDates <- read_rds(str_c(path, "/raster_time_stack/ndmi_rds/ndmi_dg_2_unique.rds"))
+
 # Todo: the years in the jday.monitStart need 
-DG.firstDate <- as.Date("2010-11-13")
-DG.lastDate <- as.Date("2015-08-15")
+DG.firstDate <- as.Date("2002-09-29")
+DG.lastDate <- as.Date("2015-08-08")
 jday.monitStart <- c(year(DG.firstDate), yday(DG.firstDate))          # Date of earliest VHSR showing still forested area
 jday.monitEnd <- c(year(DG.lastDate),yday(DG.lastDate))             # Date of latest VHSR
+
+NDMI.uniqueDates.trim <- subsetRasterTS(NDMI.uniqueDates, 
+                                        maxDate = jday.monitEnd)
+
+# If arbitrary start
+jday.monitStart <- c(2007,1)
+
+# Run BFAST Spatial 
 time <- system.time(  # Check formula!
-  bfmArea <- bfmSpatial(NDMI.uniqueDates, start = jday.monitStart, order = 1, h = 0.25, 
-                            formula = response ~ harmon + trend, history = "all",                    
-                            monend = jday.monitEnd)
+  bfmArea <- bfmSpatial(NDMI.uniqueDates.trim, start = jday.monitStart, order = 1, h = 0.25, 
+                            formula = response ~ harmon + trend, history = "all")
 )
 # Takes 8 mins!
-write_rds(bfmArea, str_c(path, "/change_map/bfmSpatial_DG1_start2010.rds"))   # Output filename!
+# write_rds(bfmArea, str_c(path, "/change_map/bfmSpatial_DG1_start2010.rds"))   # Output filename!
+write_rds(bfmArea, str_c(path, "/change_map/bfmSpatial_DG2_start2007.rds"))   # Output filename!
+
 
 # Change date
 change <- raster(bfmArea, 1)
@@ -192,8 +204,9 @@ change.year <- as.integer(change)
 # binary.change[!is.na(binary.change)] <- 1
 
 # Write to disk
-writeRaster(change.year, filename = paste(path, "/change_map/bfmSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
+# writeRaster(change.year, filename = paste(path, "/change_map/bfmSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
 # writeRaster(binary.change, filename = paste(path, "/change_map/bfmSpatial_DG1_binary.tif", sep = ""), format = "GTiff")
+writeRaster(change.year, filename = paste(path, "/change_map/bfmSpatial_DG2_start2007_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
 
 
 # Change magnitude
@@ -218,18 +231,23 @@ NDMI.uniqueDates.trim <- subsetRasterTS(NDMI.uniqueDates,
                                             maxDate = jday.monitEnd)
 
 time.reg <- system.time(
-  regrowArea <- regSpatial(NDMI.uniqueDates.trim, change = bfmArea$breakpoint, h = 0.5, type = "irregular") 
+  regrowArea <- regSpatial(NDMI.uniqueDates.trim, change = bfmArea$breakpoint, h = 0.5, type = "irregular",
+                           w = 2, s = 1)   # default w = 3, s = 1
 )
+# takes 11 mins
 
 raster::plot(regrowArea)
 
 # Write to disk
-write_rds(regrowArea, str_c(path, "/change_map/regSpatial_DG1_end2015.rds"))
+# write_rds(regrowArea, str_c(path, "/change_map/regSpatial_DG1_end2015.rds"))
+write_rds(regrowArea, str_c(path, "/change_map/regSpatial_DG2_bfmStart2007_regEnd2015.rds"))
+
 
 # Date of regrowth
 regYear <- as.integer(regrowArea$regrowth_onset)
 regYear[regYear == -9999] <- NA
-writeRaster(regYear, filename = paste(path, "/change_map/regSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
+# writeRaster(regYear, filename = paste(path, "/change_map/regSpatial_DG1_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
+writeRaster(regYear, filename = paste(path, "/change_map/regSpatial_DG2_bfmStart2007_regEnd2015_date.tif", sep = ""), format = "GTiff", overwrite = TRUE)
 
 
 

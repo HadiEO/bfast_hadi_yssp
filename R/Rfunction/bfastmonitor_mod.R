@@ -48,7 +48,7 @@ bfastmonitor_mod <- function (data, start, formula = response ~ trend + harmon,
     cat(sprintf("Length (in years): %f\n", NROW(history_tspp)/freq))
   }
   test_tspp <- history_tspp
-  test_mefp <- mefp(formula, data = test_tspp, type = type, 
+  test_mefp <- mefp(formula, data = test_tspp, type = type,      # mefp object class created
                     period = end, h = h, alpha = level[1])
   test_lm <- lm(formula, data = test_tspp)
   if (floor(h * NROW(test_tspp)) <= 1 | NROW(test_tspp) <= 

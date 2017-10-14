@@ -20,6 +20,9 @@ extrNDMI <- bfastSpatial::zooExtract(x = NDMI.unique.sub,
 colnames(extrNDMI) <- as.character(demoPixels$DemoId)
 write_rds(extrNDMI, str_c(path, "/extracted_time_series/extrNDMIsub_DG1_demo.rds"))
 
+# Load the saved time series
+extrNDMI <- read_rds(str_c(path, "/extracted_time_series/extrNDMIsub_DG1_demo.rds"))
+
 # Create gap-less time series
 extrNDMI.ls <- as.list(extrNDMI)
 # demo.bts <- bfastts(extrNDMI[, "B5"], dates = getZ(NDMI.unique.sub), type = "irregular")
@@ -146,11 +149,11 @@ jday.monitStart <- c(year(DG.firstDate), yday(DG.firstDate))          # Date of 
 
 demo.bfm.TH.1.ls <- lapply(demo.bts.1.ls, 
                          FUN = function(z) bfastmonitor(z, start = jday.monitStart, 
-                                                        formula = response~harmon+trend, order = 6, plot = FALSE, h = 0.25, history = "all", level = 0.05))
+                                                        formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all", level = 0.05))
 
 demo.bfm.TH.2.ls <- lapply(demo.bts.2.ls, 
                            FUN = function(z) bfastmonitor(z, start = jday.monitStart, 
-                                                          formula = response~harmon+trend, order = 6, plot = FALSE, h = 0.25, history = "all", level = 0.05))
+                                                          formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all", level = 0.05))
 
 # Sequential by 1 year
 # years <- c(2002:2016)
@@ -260,7 +263,7 @@ demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
 
 # Make monthly time series
 require(xts)
-temp <- demo.bts.ls.int$P1                         # Which time series to demo
+temp <- demo.bts.ls.int$B1                         # Which time series to demo
 temp.xts <- xts(as.numeric(temp), 
                 date_decimal(index(temp)))
 temp.month <- apply.monthly(temp.xts, FUN=mean)
@@ -271,18 +274,18 @@ temp.month.ts <- ts(as.numeric(temp.month), start = c(year(start(temp.month)),mo
 
 
 # Parallelize
-# detectCores()
-# cl <- makeCluster(3)                                     
-# registerDoParallel(cl)
-# getDoParWorkers()
-# clusterEvalQ(cl, .libPaths("C:/Program Files/R/R-3.3.1/library"))
-# clusterEvalQ(cl, library(doParallel))
+detectCores()
+cl <- makeCluster(3)
+registerDoParallel(cl)
+getDoParWorkers()
+clusterEvalQ(cl, .libPaths("C:/Program Files/R/R-3.3.1/library"))
+clusterEvalQ(cl, library(doParallel))
 
 t.segment <- system.time(
   bf <- bfast(temp.month.ts, h = 0.15, season = "harmonic", max.iter = 1, hpc = "foreach")
 )
 
-# stopCluster(cl)  
+stopCluster(cl)
 
 plot(bf, type="trend", largest=TRUE, main = "Sample P1, Fig. 13 in report")
 
@@ -313,7 +316,64 @@ plot(bf01_h25$B5, regular = TRUE, ylim = c(-0.2, 0.6), ylab = "NDMI", xlab = "")
 plot(bf01_h25$A1, regular = TRUE, ylim = c(-0.2, 0.6), ylab = "NDMI", xlab = "Date")
 dev.off()
 
+#################################################################################################################
+# Compare segmentation and BFAST Monitor --------------------------------
+##################################################################################################################
+# Load the saved time series
+extrNDMI <- read_rds(str_c(path, "/extracted_time_series/extrNDMIsub_DG1_demo.rds"))
 
+# Create gap-less time series
+extrNDMI.ls <- as.list(extrNDMI)
+# demo.bts <- bfastts(extrNDMI[, "B5"], dates = getZ(NDMI.unique.sub), type = "irregular")
+demo.bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = time(z), type = "irregular"))
+
+# Run bfastmonitor 
+DG.firstDate <- as.Date("2002-09-29")
+DG.lastDate <- as.Date("2015-08-15")
+jday.monitStart <- c(year(DG.firstDate), yday(DG.firstDate))          # Date of earliest VHSR showing still forested area
+
+demo.bfm.TH.ls <- lapply(demo.bts.ls,   # change back to demo.bts.ls !
+                         FUN = function(z) bfastmonitor(z, start = jday.monitStart, 
+                                                        formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all"))
+
+# Run segmentation                                                      # TODO: make this a function
+demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
+
+# Make monthly time series
+require(xts)
+temp <- demo.bts.ls.int$B1                         # Which time series to demo
+temp.xts <- xts(as.numeric(temp), 
+                date_decimal(index(temp)))
+temp.month <- apply.monthly(temp.xts, FUN=mean)
+
+# Need to convert back to ts for bfast
+temp.month.ts <- ts(as.numeric(temp.month), start = c(year(start(temp.month)),month(start(temp.month))), 
+                    frequency = 12)     # Freq = 12 cause monthly, 23 if 16-days
+# Parallelize
+detectCores()
+cl <- makeCluster(3)
+registerDoParallel(cl)
+getDoParWorkers()
+clusterEvalQ(cl, .libPaths("C:/Program Files/R/R-3.3.1/library"))
+clusterEvalQ(cl, library(doParallel))
+
+t.segment <- system.time(
+  bf <- bfast(temp.month.ts, h = 0.15, season = "harmonic", max.iter = 1, hpc = "foreach")
+)
+
+stopCluster(cl)
+
+# Compare
+demo.bfm.TH.ls$B1     # Breaks detected 2011(246) i.e. as.Date(246, origin = "2011-01-01") = "2011-09-04"
+bf                    # Largest breakpoint at 2011(5) i.e. May 2011
+
+x11()
+par(mfrow = c(2,1))
+plot(demo.bfm.TH.ls$B1)
+plot(bf, type="trend", largest=TRUE)
+
+str(demo.bfm.TH.ls$B1)
+str(bf)
 
 
 #################################################################################################################
@@ -367,10 +427,6 @@ demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
 test <- demo.bts.ls.int$P4
 require(xts)
 test.month <- apply.monthly(as.xts(zoo.test), FUN=mean)
-
-
-
-
 
 
 t.bf01 <- system.time(

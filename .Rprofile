@@ -29,6 +29,8 @@ require(bayts)
 require("doSNOW")                                 # <-------------------------------- Set up parallelization
 require("doParallel")
 source("R/Rfunction/removedips.R")
+require(xts)
+require(animation)
 
 
 

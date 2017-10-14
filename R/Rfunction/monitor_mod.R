@@ -26,12 +26,12 @@ monitor_mod <- function (obj, data = NULL, verbose = TRUE)
   foundBreak <- FALSE
   if ((obj$type == "OLS-MOSUM") | (obj$type == "OLS-CUSUM")) {
     if (obj$type == "OLS-CUSUM") {
-      obj$process <- obj$computeEmpProc(x, y)[-(1:obj$histsize)]
+      obj$process <- obj$computeEmpProc(x, y)[-(1:obj$histsize)]     # computeEmpProc(x, y) is a function?
     }
-    else {
+    else {   # else (obj$type == "OLS-MOSUM")
       obj$process <- obj$computeEmpProc(x, y)[-(1:length(obj$efpprocess))]     # What is the ( ) indexing?
     }
-    boundary <- obj$border((obj$histsize + 1):nrow(x))                  # boundary
+    boundary <- obj$border((obj$histsize + 1):nrow(x))                  # boundary; border() is a function?
     obj$statistic <- max(abs(obj$process))
     if (!foundBreak & any(abs(obj$process) > boundary)) {
       foundBreak <- TRUE

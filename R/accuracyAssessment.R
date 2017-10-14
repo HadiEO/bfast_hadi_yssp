@@ -67,25 +67,39 @@ ref.lastDate <- list(DG1 = as.Date("2015-08-15"), DG2 = as.Date("2015-08-08"),
                      SC1 = as.Date("2014-02-04"))
 
 
+# Need these dates in c(year, jday) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+source("R/Rfunction/dateToYearJday.R")
+ref.firstDate <- lapply(ref.firstDate, dateToYearJday)
+ref.lastDate <- lapply(ref.lastDate, dateToYearJday)
+
+
 
 # Extract the NDMI at select Landsat pixels and run BFAST Monitor --------------------------------
+# Debug
+# NDMI.unique = NDMI.DG1.unique
+# samples = selectLandsatPixels.DG1
+# firstDate = ref.firstDate$DG1
+# lastDate = ref.lastDate$DG1
+# extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_DG1.rds")
+# bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_DG1.rds")
 
 
-attachBfmFlagToSp <- function(NDMI.unique, samples, firstDate, lastDate, extrOutName, bfmOutName) {
-  # NDMI.unique.sub <- subsetRasterTS(NDMI.unique, maxDate = lastDate)
-  # extrNDMI<- zooExtract(NDMI.unique.sub, samples, method = "simple")
-  # colnames(extrNDMI) <- as.character(samples$Id_1)
-  # write_rds(extrNDMI, extrOutName)
-  # # Create gap-less time series
-  # extrNDMI.ls <- as.list(extrNDMI)
-  # bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDMI.unique.sub), type = "irregular"))
-  # # Run BFAST Monitor
-  # jday.monitStart <- c(year(firstDate), yday(firstDate))
-  # bfm.TH.ls <- lapply(bts.ls,
-  #                     FUN = function(z) bfastmonitor(z, start = jday.monitStart,
-  #                                                   formula = response~harmon+trend, order = 1, plot = FALSE, h = 0.25, history = "all"))
-  # write_rds(bfm.TH.ls, bfmOutName)
-  bfm.TH.ls <- read_rds(bfmOutName)
+# Check formula!
+attachBfmFlagToSp <- function(NDMI.unique, samples, firstDate, lastDate, extrOutName, bfmOutName, outSamplesName) {
+  NDMI.unique.sub <- subsetRasterTS(NDMI.unique, maxDate = lastDate)
+  extrNDMI <- zooExtract(NDMI.unique.sub, samples, method = "simple")
+  colnames(extrNDMI) <- as.character(samples$Id_1)
+  write_rds(extrNDMI, extrOutName)
+  # Create gap-less time series
+  extrNDMI.ls <- as.list(extrNDMI)
+  bts.ls <- lapply(extrNDMI.ls, FUN = function(z) bfastts(z, dates = getZ(NDMI.unique.sub), type = "irregular"))
+  # Run BFAST Monitor
+  jday.monitStart <- firstDate
+  bfm.TH.ls <- lapply(bts.ls,
+                      FUN = function(z) bfastmonitor(z, start = jday.monitStart,
+                                                    formula = response~harmon, order = 1, plot = FALSE, h = 0.25, history = "all"))
+  write_rds(bfm.TH.ls, bfmOutName)
+  # bfm.TH.ls <- read_rds(bfmOutName)
   # Tell sample if BFAST detects DISTURBANCE (1) or NON-DISTURBANCE (0)
   bfm.TH.magn.ls <- lapply(bfm.TH.ls, FUN = function(z) z$magnitude)
   bfm.TH.dist.ls <- lapply(bfm.TH.ls, FUN = function(z) ifelse(!is.na(z$breakpoint), 1, 0))
@@ -100,42 +114,61 @@ attachBfmFlagToSp <- function(NDMI.unique, samples, firstDate, lastDate, extrOut
   samples$FP <- 0
   samples[which((samples$Disturbance == 1) & (samples$bfm.flag == 1)), "TP"] <- 1
   samples[which((samples$Disturbance == 0) & (samples$bfm.flag == 1)), "FP"] <- 1
+  samples$TP.rev <- 0
+  samples$FP.rev <- 0
+  samples[which((samples$Disturbance == 1) & (samples$bfm.flag.rev == 1)), "TP.rev"] <- 1
+  samples[which((samples$Disturbance == 0) & (samples$bfm.flag.rev == 1)), "FP.rev"] <- 1
+  
+  write_rds(samples, outSamplesName)
   
   # Return
   return(samples)
 }
 
+
+# I ran firstly with harmon+trend model, a second time with just harmon
 DG1.bfmFlag <- attachBfmFlagToSp(NDMI.DG1.unique, selectLandsatPixels.DG1, ref.firstDate$DG1, ref.lastDate$DG1, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_DG1.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_DG1.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_DG1.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_DG1.rds"))
 
 DG2.bfmFlag <- attachBfmFlagToSp(NDMI.DG2.unique, selectLandsatPixels.DG2, ref.firstDate$DG2, ref.lastDate$DG2, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_DG2.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_DG2.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_DG2.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_DG2.rds"))
 
 sq9.bfmFlag <- attachBfmFlagToSp(NDMI.sq9.unique, selectLandsatPixels.sq9, ref.firstDate$sq9, ref.lastDate$sq9, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq9.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq9.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_sq9.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_sq9.rds"))
 
 sq10.bfmFlag <- attachBfmFlagToSp(NDMI.sq10.unique, selectLandsatPixels.sq10, ref.firstDate$sq10, ref.lastDate$sq10, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq10.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq10.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_sq10.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_sq10.rds"))
 
 sq11.bfmFlag <- attachBfmFlagToSp(NDMI.sq11.unique, selectLandsatPixels.sq11, ref.firstDate$sq11, ref.lastDate$sq11, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq11.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq11.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_sq11.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_sq11.rds"))
 
 sq13.bfmFlag <- attachBfmFlagToSp(NDMI.sq13.unique, selectLandsatPixels.sq13, ref.firstDate$sq13, ref.lastDate$sq13, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq13.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq13.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_sq13.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_sq13.rds"))
 
 SC1.bfmFlag <- attachBfmFlagToSp(NDMI.SC1.unique, selectLandsatPixels.SC1, ref.firstDate$SC1, ref.lastDate$SC1, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_SC1.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_SC1.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_SC1.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_SC1.rds"))
 
 sq13.addIntact.bfmFlag <- attachBfmFlagToSp(NDMI.sq13.unique, selectLandsatPixels.addIntactForest.sq13, ref.firstDate$sq13, ref.lastDate$sq13, 
                                  extrOutName = str_c(path, "/extracted_time_series/extrNDMIsub_sq13_addIntact.rds"), 
-                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_extrNDMIsub_sq13_addIntact.rds"))
+                                 bfmOutName = str_c(path, "/extracted_time_series/bfm_justHarmon_extrNDMIsub_sq13_addIntact.rds"),
+                                 outSamplesName = str_c(path, "/extracted_time_series/accuracy_justHarmon_sq13addIntact.rds"))
+
+
+
 
 
 # Sample-based accuracy ---------------------------------------------------

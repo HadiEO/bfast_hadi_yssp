@@ -1,4 +1,5 @@
-plot.tsreg.mod <- function (x, ylabs = c("data", "|MOSUM|"), legend = TRUE) 
+plot.tsreg.mod <- function (x, ylabs = c("data", "|MOSUM|"), legend = TRUE, 
+                            main = NULL, text.x, text.y, text.text) 
 {
   lo <- matrix(c(1:2), nr = 2, nc = 1)
   layout(lo)
@@ -7,8 +8,9 @@ plot.tsreg.mod <- function (x, ylabs = c("data", "|MOSUM|"), legend = TRUE)
   # op <- par(oma = c(0, 0, 0, 0), mai = c(0, 0.35, 0, 0.1),                # mai = c(0.45, 0.35, 0.1, 0.1)
   #           ps = 12, mgp = c(1.7, 0.5, 0), mar =c(2.7, 2.6, 0.5, 1.5))
   
-  plot(x$data, xlab = "", xaxt = "n", ylab = ylabs[1])
+  plot(x$data, xlab = "", xaxt = "n", ylab = ylabs[1], main = main)
   lines(x$fit, col = "blue")
+  text(text.x, text.y, text.text)
   points(x$data[time(x$data) >= min(time(x$fit)) & time(x$data) <= 
                   max(time(x$fit))], type = "p", pch = "*", cex = 0.7, 
          col = "blue")
