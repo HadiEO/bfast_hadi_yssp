@@ -23,12 +23,6 @@ ref <- all.bfmFlag$ref.detection
 # (3) additional date criterion: 
 # *******************************************************************************
 predNotBeforeRef <- all.bfmFlag$bfm.date.confirmed >= all.bfmFlag$ref.date 
-# predNotBeforeRef <- all.bfmFlag$bfm.date.confirmed >= all.bfmFlag$ref.date.adj  
-
-# OR allow 45 days difference (checked SC1 this lag still shows change near the correct date)
-# predNotBeforeRef <- as.numeric((all.bfmFlag$bfm.date.confirmed - all.bfmFlag$ref.date.adj)) > -45
-# Yes I take this decision cause those with lag up to 45 days before ref date really 
-# are not false positive!
 
 calc_spatial_accuracy(ref = ref, 
                       pred = all.bfmFlag$bfm.detection,
@@ -40,7 +34,7 @@ calc_spatial_accuracy(ref = ref,
 #                        ref.date, ref.date.adj, bfm.date.confirmed) %>%
 #   mutate(lag.adj = bfm.date.confirmed - ref.date.adj,
 #          predNotBeforeRef = bfm.date.confirmed >= ref.date.adj)
-#          # predNotBeforeRefMore7 = as.numeric(bfm.date.confirmed - ref.date.adj) > -45)
+#   
 # 
 # temp %>% filter(lag.adj < 0)
 # 
