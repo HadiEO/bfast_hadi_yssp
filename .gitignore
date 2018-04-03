@@ -1,4 +1,5 @@
 # Ignore directories?
+report
 
 # History files
 .Rhistory

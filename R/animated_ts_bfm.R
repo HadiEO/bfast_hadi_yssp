@@ -157,3 +157,6 @@ for(i in 1:length(bfmPlot.ls)) {
   ggsave(str_c(path, "/animation/other_small_clearing/bfm_H/", "Rplot_", i, ".png"), plot = bfmPlot.ls[[i]],   #TODO: save filename with the plot ID
          width = 140, height = 80, units = "mm")
 }
+
+# Modified bfastmonitor ----------------------------------------------------------------
+ 

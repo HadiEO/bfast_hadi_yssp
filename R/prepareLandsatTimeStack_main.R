@@ -1,5 +1,5 @@
 ## This code takes the Landsat image time stack downloaded from GEE and prepare them to be ready for running BFAST Spatial
-## Update: err not quite ready actually needs to run makeUniqueDates() later
+## Update: err not quite ready actually needs to run makeUniqueDates() later. Update: this is implemented already
 
 # Read the image time stack downloaded from GEE
 L5 <- brick(paste(path, "/raster_time_stack/ndmi_geotiff/DG_1/landsat5thermal_DG_1.tif", sep = ""))   # Landsat-5

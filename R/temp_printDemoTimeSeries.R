@@ -285,9 +285,15 @@ t.segment <- system.time(
   bf <- bfast(temp.month.ts, h = 0.15, season = "harmonic", max.iter = 1, hpc = "foreach")
 )
 
+t.segment2 <- system.time(
+  bf2 <- bfast(temp.month.ts, breaks = 4, season = "harmonic", max.iter = 1, hpc = "foreach")
+)
+
 stopCluster(cl)
 
-plot(bf, type="trend", largest=TRUE, main = "Sample P1, Fig. 13 in report")
+plot(bf, type="trend", largest=TRUE, main = "")
+plot(bf2, type="trend", largest=TRUE, main = "")
+
 
 plot(bf)
 plot(bf, sim = temp.month.ts)
@@ -425,8 +431,7 @@ dev.off()
 # Test segmentation
 demo.bts.ls.int <- lapply(demo.bts.ls, FUN = function(z) na.approx(z))
 test <- demo.bts.ls.int$P4
-require(xts)
-test.month <- apply.monthly(as.xts(zoo.test), FUN=mean)
+test.month <- apply.monthly(as.xts(test), FUN=mean)
 
 
 t.bf01 <- system.time(

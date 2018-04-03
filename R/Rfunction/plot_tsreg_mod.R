@@ -1,3 +1,5 @@
+# Original code source: https://github.com/bendv/rgrowth/blob/master/R/plot.tsreg.R
+
 plot.tsreg.mod <- function (x, ylabs = c("data", "|MOSUM|"), legend = TRUE, 
                             main = NULL, text.x, text.y, text.text) 
 {

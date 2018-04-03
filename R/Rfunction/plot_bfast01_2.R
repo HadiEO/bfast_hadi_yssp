@@ -1,3 +1,5 @@
+# Original code source: not mine
+
 plot_bfast01_2 <- function(x, breaks = NULL, which = c("response", "fitted", "trend"),
                          plot.type = "single", panel = NULL, screens = NULL,
                          col = NULL, lwd = NULL,
