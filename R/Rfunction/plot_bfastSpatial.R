@@ -1,5 +1,3 @@
-# Original code source: not mine
-
 require(RColorBrewer)
 
 # Input x => change year = round(bfmArea$breakpoint, 0)

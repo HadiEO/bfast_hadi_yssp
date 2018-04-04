@@ -252,15 +252,6 @@ dev.off()
 
 
 
-
-# bayts
-# bayts_date <- index(bayts)
-# bayts_date <- as.Date(format(date_decimal(bayts_date), "%Y-%m-%d"), "%Y-%m-%d")
-# getDateDiff(bayts_date, onlyValidObs = FALSE)
-# bayts is not regular!!
-
-
-
 # *****************************************************************************
 # Plot contribution of different sensors ----------------------------------
 # *****************************************************************************

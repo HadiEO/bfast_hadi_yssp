@@ -1,13 +1,6 @@
 # Original code source: https://github.com/hamun001/STEF/blob/master/R/removedips.R
 
-# Checked, this is code for each time series i.e. observation time sequence i, c, b
-# Update: maybe need to modify so to search temporal neighbours up to 8 days i.e. c-8, c, c+8 ?
-# 8-days certainly not enough as date between valid observations is spread out > 8 days
-# So best thing to try now is to make the function works with zoo ts object.
-# But doesn't make sense to use neighbouring observation at say >1 year gap!
-# Write removedips_mod below
 
-# Update: this may not be the most updated version on github ********************************
 removedips <- function (x) {
   # Convert to t (regular) ts object if zoo (irregular)
   if(class(x) == "zoo") {
@@ -47,8 +40,6 @@ removedips <- function (x) {
 
 # Modify:
 # (a) search until it finds non-NA neighbour in the raw (irregular) time series
-# Fig. 5 in Hamunyela et al. (2016) seems to indicate the immediate neighbours are non-NA neighbours beyond 
-# (t-1) and (t+1). In other words, t is t-th observation order.
 # (b) search non-NA neighbour within n years
 
 removedips_mod <- function (x, updateX, searchWindow) {
@@ -101,14 +92,7 @@ removedips_mod <- function (x, updateX, searchWindow) {
     }
   }
 
-  # Thinking corner:  
-  # In the above: maybe just make NA? i.e. remove dips, not replace dips with average of neighbours
-  # No, it removes disturbance signal points too
-  # But this would mean no gap-filling.
-  # But if we know it's ephemeral noise, then we know there is no change at the noisy date,
-  # That it maybe ok to interpolate from the two neighbour dates
-  # To be safe just do what has been published i.e. peer-reviewed!
-  
+ 
   yts <- ts(data = y, start = start(x), frequency = frequency(x))
   
   return (yts)

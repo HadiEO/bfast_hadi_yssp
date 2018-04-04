@@ -33,8 +33,8 @@
 
 
 # The function
-# IMPORTANT NOTICE:Had to disable snap date in bfastbfastmonitor_mod() so the date may have slight mismatch
-# Round it to month
+# IMPORTANT NOTICE: Had to disable snap date in bfastbfastmonitor_mod() so the date may have slight mismatch
+# But ok if change date aggregated to week/month/year
 
 
 bfmSpatial_mod <- function(x, 

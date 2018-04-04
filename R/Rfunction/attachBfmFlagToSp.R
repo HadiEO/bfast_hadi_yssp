@@ -22,6 +22,11 @@
 # bfm.ls$`1131` has: magnitude, mefp, breakpoint, breakpoint_firstFlagged, failedTooFewHistObs
 # Leave calculations related to accuracy assessment outside the function!
 
+
+# Currently using sp object and attach the change information to the sp object's data frame.
+# Todo: implement with sf object for much simpler tidyverse-based code
+
+
 attachBfmFlagToSp <- function(extrNDMI, samples, start, bfmOutName, outSamplesName, oldFlagOutName, history = "all",
                               historyNoiseRemoved, allNoiseRemoved = FALSE, searchWindow, cons, maxTimeSpan, updateMOSUM,
                               boundaryRMSE = FALSE, factorRMSE = NULL,
@@ -117,7 +122,7 @@ attachBfmFlagToSp <- function(extrNDMI, samples, start, bfmOutName, outSamplesNa
   samples$bfm.date.confirmed <- dec2date(samples$bfm.date.confirmed)
   # Temporal accuracy calculation to be done outside this function
   
-  # Snap bfm dates to time series dates (possible bug in bfastts causes missing or duplicate dates in regularized ts (daily))
+  # Snap bfm dates to time series dates (possible bug in bfastts causes missing or duplicate dates in regularized ts (daily), maybe because all years are treated 365 days)
   # This not needed anymore, I have fixed the date mismatch issue, in bfastmonitor_mod()
   # No, there is still difference of 1-day not sure why, so let's snap it.
   for(i in 1:length(names(extrNDMI.ls))) {

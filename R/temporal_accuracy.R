@@ -23,7 +23,7 @@ NROW(all.bfmFlag.TP)
 
 
 
-# Confirmed change date should be not before reference date (with 45 days window considering uncertainty in reference date identified visually)
+# Confirmed change date should be not before reference date 
 all.bfmFlag.TP.bfmDateNotBeforeRef <- all.bfmFlag.TP %>% 
   # filter(bfm.date.confirmed >= ref.date.adj)
   filter(bfm.date.confirmed >= ref.date)
@@ -37,7 +37,7 @@ all.bfmFlag.TP.bfmDateNotBeforeRef <- all.bfmFlag.TP.bfmDateNotBeforeRef %>%
          lag.firstFlagged = bfm.date.firstFlagged - ref.date)
 
 # hist(as.numeric(all.bfmFlag.TP.bfmDateNotBeforeRef$lag.confirmed))
-# hist(as.numeric(all.bfmFlag.TP.bfmDateNotBeforeRef$lag.firstFlagged))   # Lots of negative values i.e. change first flagged before reference date
+# hist(as.numeric(all.bfmFlag.TP.bfmDateNotBeforeRef$lag.firstFlagged))   
 
 # ******************************************************
 # lag

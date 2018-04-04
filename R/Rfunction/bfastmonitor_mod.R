@@ -32,9 +32,9 @@ bfastmonitor_mod <- function (data, start, formula = response ~ trend + harmon,
                               factorRMSE = NULL,
                               boundaryRMSE = FALSE,
                               snapDate = TRUE,
-                              originalDateNoNA,
+                              originalDateNoNA,                 # Update 2018-03-06 need this to fix the apparently mismatched date caused by possibly issue in bfastts(), maybe due to all years treated 365 days        
                               factorRMSE_immediate = NULL,
-                              allowImmediateConfirm = FALSE)          # Update 2018-03-06 need this to fix the apparently mismatched date caused by possibly issue in bfastts()                          
+                              allowImmediateConfirm = FALSE)                            
 {
   if(cons == 1) maxTimeSpan <- 9999      # Not apply consecutive anomaly for confirming change
   
